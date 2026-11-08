@@ -98,17 +98,18 @@ function song() { return SONGS[state.songIndex]; }
 function fragment() { return song().fragments[state.fragmentIndex]; }
 function noteKey(fragmentIndex = state.fragmentIndex, noteIndex = state.noteIndex) { return `${song().id}:${fragmentIndex}:${noteIndex}`; }
 function currentNote() { return POSITIONS[fragment().notes[state.noteIndex]]; }
-function noteNoun(count) {
+function stepNoun(count) {
   const lastTwo = count % 100;
-  if (lastTwo >= 11 && lastTwo <= 14) return 'нот';
-  if (count % 10 === 1) return 'нота';
-  if (count % 10 >= 2 && count % 10 <= 4) return 'ноты';
-  return 'нот';
+  if (lastTwo >= 11 && lastTwo <= 14) return 'шагов';
+  if (count % 10 === 1) return 'шаг';
+  if (count % 10 >= 2 && count % 10 <= 4) return 'шага';
+  return 'шагов';
 }
+function positionText(target) { return `струна ${target.string}, ${target.fret === 0 ? 'открытая' : `лад ${target.fret}`}`; }
 
 function renderSongs() {
   document.querySelector('.catalog-count').textContent = String(SONGS.length).padStart(2, '0');
-  $('song-list').innerHTML = SONGS.map((item, i) => { const count = item.fragments.reduce((n, f) => n + f.notes.length, 0); return `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${count} ${noteNoun(count)} · ${item.fragments.length} фрагм.</span></span><span class="song-arrow">→</span></button>`; }).join('');
+  $('song-list').innerHTML = SONGS.map((item, i) => { const count = item.fragments.reduce((n, f) => n + f.notes.length, 0); return `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${count} ${stepNoun(count)} · ${item.fragments.length} фрагм.</span></span><span class="song-arrow">→</span></button>`; }).join('');
   document.querySelectorAll('[data-song]').forEach(button => button.addEventListener('click', () => {
     const next = Number(button.dataset.song);
     if (next === state.songIndex) return;
@@ -119,7 +120,8 @@ function renderSongs() {
 function renderNotes() {
   $('note-list').innerHTML = fragment().notes.map((key, i) => {
     const done = Boolean(state.completed[noteKey(state.fragmentIndex, i)]);
-    return `<button class="note-button ${i === state.noteIndex ? 'active' : ''} ${done ? 'complete' : ''}" data-note="${i}" type="button" aria-label="Нота ${i + 1}: ${POSITIONS[key].label}${done ? ', освоена' : ''}" aria-pressed="${i === state.noteIndex}"><span class="note-number">${String(i + 1).padStart(2, '0')}</span><span class="note-symbol">${POSITIONS[key].label}</span>${done ? '<span class="note-check">✓</span>' : ''}</button>`;
+    const target = POSITIONS[key];
+    return `<button class="note-button ${i === state.noteIndex ? 'active' : ''} ${done ? 'complete' : ''}" data-note="${i}" type="button" aria-label="Шаг ${i + 1}: ${positionText(target)}${done ? ', пройден' : ''}" aria-pressed="${i === state.noteIndex}"><span class="note-number">ШАГ ${i + 1}</span><span class="step-string">Струна <strong>${target.string}</strong></span><span class="step-fret">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>${done ? '<span class="note-check">✓</span>' : ''}</button>`;
   }).join('');
   document.querySelectorAll('[data-note]').forEach(button => button.addEventListener('click', () => {
     stopListening(); stopPlayback(); state.noteIndex = Number(button.dataset.note); setFeedback('ready'); render();
@@ -128,15 +130,15 @@ function renderNotes() {
 
 function renderFretboard() {
   const target = currentNote();
-  const labels = ['1 · ми', '2 · си', '3 · соль', '4 · ре', '5 · ля', '6 · ми'];
+  const labels = ['1-я', '2-я', '3-я', '4-я', '5-я', '6-я'];
   $('fretboard').innerHTML = labels.map((label, i) => {
     const string = i + 1;
     const cells = Array.from({ length: 6 }, (_, fret) => {
       const active = target.string === string && target.fret === fret;
-      const marker = active ? (fret === 0 ? '<span class="open-marker">○</span>' : `<span class="finger-marker">${target.finger}</span>`) : '';
-      return `<span class="fret-cell ${fret === 0 ? 'open-cell' : ''}">${marker}</span>`;
+      const marker = active ? (fret === 0 ? '<span class="open-marker">○</span>' : `<span class="finger-marker">${target.fret}</span>`) : '';
+      return `<span class="fret-cell ${fret === 0 ? 'open-cell' : ''} ${active ? 'active-fret' : ''}">${marker}</span>`;
     }).join('');
-    return `<div class="fret-row" style="--string-thickness:${Math.max(1, i * .42 + 1)}px"><span class="string-label">${label}</span>${cells}</div>`;
+    return `<div class="fret-row ${string === target.string ? 'active-string' : ''}" style="--string-thickness:${Math.max(1, i * .42 + 1)}px"><span class="string-label">${label}</span>${cells}</div>`;
   }).join('');
   $('fretboard').setAttribute('aria-label', `${target.string}-я струна, ${target.fret === 0 ? 'открытая' : `${target.fret}-й лад, ${target.finger}-й палец`}`);
   const scroll = document.querySelector('.fret-scroll');
@@ -156,24 +158,23 @@ function render() {
   $('note-counter').textContent = `${state.noteIndex + 1} / ${fragment().notes.length}`;
   renderNotes();
   const target = currentNote();
-  $('position-title').textContent = `${target.string}-я струна · ${target.fret === 0 ? 'открытая' : `${target.fret}-й лад`}`;
-  $('position-hint').textContent = target.fret === 0 ? 'Сыграй струну, не зажимая лад' : `Зажми ${['', 'первым', 'вторым', 'третьим', 'четвёртым'][target.finger]} пальцем`;
-  $('pitch-badge').textContent = target.label;
+  $('position-title').innerHTML = `<span class="position-pill">Струна <strong>${target.string}</strong></span><span class="position-join">→</span><span class="position-pill">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>`;
+  $('position-hint').textContent = target.fret === 0 ? 'Сыграй струну, ничего не зажимая' : `Зажми ${target.fret}-й лад ${['', 'первым', 'вторым', 'третьим', 'четвёртым'][target.finger]} пальцем`;
   renderFretboard();
   const total = song().fragments.reduce((n, f) => n + f.notes.length, 0);
   const count = song().fragments.reduce((n, f, fi) => n + f.notes.filter((_, ni) => state.completed[noteKey(fi, ni)]).length, 0);
-  $('progress-text').textContent = `Освоено нот: ${count} из ${total}`;
-  $('next-note').textContent = state.noteIndex === fragment().notes.length - 1 && state.fragmentIndex === song().fragments.length - 1 ? 'К первой ноте ↺' : 'Следующая нота →';
+  $('progress-text').textContent = `Пройдено шагов: ${count} из ${total}`;
+  $('next-note').textContent = state.noteIndex === fragment().notes.length - 1 && state.fragmentIndex === song().fragments.length - 1 ? 'К первому шагу ↺' : 'Следующий шаг →';
 }
 
 function setFeedback(type, detail = '') {
   const messages = {
-    ready: ['✦', 'Готово к игре', 'Послушай ноту, затем сыграй её на гитаре и нажми «Проверить».'],
+    ready: ['✦', 'Готово к игре', 'Посмотри на струну и лад, послушай звук и повтори его на гитаре.'],
     loading: ['♫', 'Загружаю звук гитары…', 'Это записи настоящих струн. Обычно загрузка нужна только один раз.'],
-    playingSong: ['♫', 'Играет вся песня', detail || 'Ноты и фрагменты подсвечиваются по ходу мелодии.'],
-    playingFragment: ['♫', 'Играет фрагмент', detail || 'Ноты подсвечиваются по ходу мелодии.'],
-    listening: ['◉', 'Слушаю гитару…', detail || 'Сыграй текущую ноту один раз. У тебя есть несколько секунд.'],
-    success: ['✓', 'Верно! Нота совпала', 'Можно перейти к следующей ноте или повторить эту.'],
+    playingSong: ['♫', 'Играет вся песня', detail || 'Шаги и фрагменты подсвечиваются по ходу мелодии.'],
+    playingFragment: ['♫', 'Играет фрагмент', detail || 'Шаги подсвечиваются по ходу мелодии.'],
+    listening: ['◉', 'Слушаю гитару…', detail || `Сыграй сейчас: ${positionText(currentNote())}.`],
+    success: ['✓', 'Отлично, звук совпал!', 'Можно перейти к следующему шагу или повторить этот.'],
     retry: ['↻', 'Пока не совпало', detail || 'Попробуй ещё раз: сыграй одну струну без лишнего шума.'],
     error: ['!', 'Не получилось включить микрофон', detail || 'Проверь разрешение на доступ к микрофону в браузере.'],
     audioError: ['!', 'Не удалось воспроизвести звук', detail || 'Проверь подключение и попробуй снова.'],
@@ -265,7 +266,7 @@ async function playSequence(kind) {
       state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
       const durationMs = selectedSong.beatMs * part.beats[noteIndex];
       pluck(part.notes[noteIndex], Math.min(1.1, durationMs / 1000 * .9));
-      setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · нота ${noteIndex + 1} из ${part.notes.length}`);
+      setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · шаг ${noteIndex + 1} из ${part.notes.length}`);
       await pause(durationMs);
     }
     if (part.pauseAfter) await pause(240);
@@ -340,15 +341,13 @@ async function checkNote() {
           if (matches >= 2) {
             stopListening(); state.completed[noteKey()] = true; saveProgress(); setFeedback('success'); render(); return;
           }
-          const midi = Math.round(69 + 12 * Math.log2(frequency / 440));
-          const names = ['ДО', 'ДО♯', 'РЕ', 'РЕ♯', 'МИ', 'ФА', 'ФА♯', 'СОЛЬ', 'СОЛЬ♯', 'ЛЯ', 'ЛЯ♯', 'СИ'];
-          setFeedback('listening', `Слышу: ${names[(midi + 120) % 12]}. Нужна нота ${currentNote().label}.`);
+          setFeedback('listening', `Пока звук не совпал. Сыграй: ${positionText(currentNote())}.`);
         }
       }
       state.frame = requestAnimationFrame(tick);
     }
     state.frame = requestAnimationFrame(tick);
-    state.listenTimer = setTimeout(() => { stopListening(); setFeedback('retry', state.lastDetected ? `Нужна нота ${currentNote().label}. Сыграй её ещё раз.` : 'Не услышал устойчивую ноту. Поднеси гитару ближе к микрофону.'); }, 8000);
+    state.listenTimer = setTimeout(() => { stopListening(); setFeedback('retry', state.lastDetected ? `Сыграй ещё раз: ${positionText(currentNote())}.` : 'Не услышал устойчивый звук. Поднеси гитару ближе к микрофону.'); }, 8000);
   } catch (error) {
     stopListening();
     setFeedback('error', error?.name === 'NotAllowedError' ? 'Разреши доступ к микрофону для этого сайта и попробуй снова.' : 'Проверь, что микрофон подключён и доступен браузеру.');
