@@ -37,6 +37,10 @@
           <div class="lesson-card">
             <div class="lesson-head">
               <div>
+                <div class="mobile-song-chooser">
+                  <label for="mobile-song-select">Мелодия</label>
+                  <select id="mobile-song-select" aria-label="Выбрать мелодию"></select>
+                </div>
                 <div class="section-eyebrow lesson-eyebrow">ТЕКУЩИЙ УРОК <span class="eyebrow-dot">•</span> ОДИН ШАГ ЗА РАЗ</div>
                 <h2 id="song-title">Во поле берёза стояла</h2>
                 <p id="song-subtitle" class="song-subtitle">Русская народная мелодия · учебная версия</p>
@@ -52,6 +56,7 @@
               <div>
                 <div class="fragment-label">ФРАГМЕНТ <span id="fragment-number">1</span> ИЗ <span id="fragment-total">2</span></div>
                 <div id="fragment-caption" class="fragment-caption">Первый мотив</div>
+                <div id="mobile-step-counter" class="mobile-step-counter">Шаг 1 из 5</div>
               </div>
               <div class="fragment-controls">
                 <button id="prev-fragment" class="round-button" type="button" aria-label="Предыдущий фрагмент">←</button>
@@ -104,6 +109,16 @@
             </div>
           </div>
           <p class="workspace-note">Микрофон сравнивает звук. Какую струну и лад выбрать, показывает гриф.</p>
+          <nav class="mobile-nav" aria-label="Навигация по мелодии">
+            <div class="mobile-nav-row">
+              <button id="mobile-prev-fragment" type="button" aria-label="Предыдущий фрагмент">← Фрагмент</button>
+              <button id="mobile-next-fragment" type="button" aria-label="Следующий фрагмент">Фрагмент →</button>
+            </div>
+            <div class="mobile-nav-row mobile-nav-steps">
+              <button id="mobile-prev-step" type="button" aria-label="Предыдущий шаг">← Шаг</button>
+              <button id="mobile-next-step" type="button" aria-label="Следующий шаг">Шаг →</button>
+            </div>
+          </nav>
         </section>
       </main>
     </div>

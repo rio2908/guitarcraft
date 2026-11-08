@@ -107,13 +107,16 @@ function stepNoun(count) {
 }
 function positionText(target) { return `струна ${target.string}, ${target.fret === 0 ? 'открытая' : `лад ${target.fret}`}`; }
 
+function selectSong(next) {
+  if (next === state.songIndex) return;
+  stopListening(); stopPlayback(); state.songIndex = next; state.fragmentIndex = 0; state.noteIndex = 0; setFeedback('ready'); render();
+}
+
 function renderSongs() {
   document.querySelector('.catalog-count').textContent = String(SONGS.length).padStart(2, '0');
   $('song-list').innerHTML = SONGS.map((item, i) => { const count = item.fragments.reduce((n, f) => n + f.notes.length, 0); return `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${count} ${stepNoun(count)} · ${item.fragments.length} фрагм.</span></span><span class="song-arrow">→</span></button>`; }).join('');
   document.querySelectorAll('[data-song]').forEach(button => button.addEventListener('click', () => {
-    const next = Number(button.dataset.song);
-    if (next === state.songIndex) return;
-    stopListening(); stopPlayback(); state.songIndex = next; state.fragmentIndex = 0; state.noteIndex = 0; setFeedback('ready'); render();
+    selectSong(Number(button.dataset.song));
   }));
 }
 
@@ -156,6 +159,12 @@ function render() {
   $('prev-fragment').disabled = state.fragmentIndex === 0;
   $('next-fragment').disabled = state.fragmentIndex === song().fragments.length - 1;
   $('note-counter').textContent = `${state.noteIndex + 1} / ${fragment().notes.length}`;
+  $('mobile-song-select').value = String(state.songIndex);
+  $('mobile-step-counter').textContent = `Шаг ${state.noteIndex + 1} из ${fragment().notes.length}`;
+  $('mobile-prev-fragment').disabled = state.fragmentIndex === 0;
+  $('mobile-next-fragment').disabled = state.fragmentIndex === song().fragments.length - 1;
+  $('mobile-prev-step').disabled = state.fragmentIndex === 0 && state.noteIndex === 0;
+  $('mobile-next-step').textContent = state.fragmentIndex === song().fragments.length - 1 && state.noteIndex === fragment().notes.length - 1 ? 'Сначала ↺' : 'Шаг →';
   renderNotes();
   const target = currentNote();
   $('position-title').innerHTML = `<span class="position-pill">Струна <strong>${target.string}</strong></span><span class="position-join">→</span><span class="position-pill">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>`;
@@ -360,15 +369,26 @@ function moveFragment(delta) {
   stopListening(); stopPlayback(); state.fragmentIndex = next; state.noteIndex = 0; setFeedback('ready'); render();
 }
 
-$('prev-fragment').addEventListener('click', () => moveFragment(-1));
-$('next-fragment').addEventListener('click', () => moveFragment(1));
-$('next-note').addEventListener('click', () => {
+function moveStep(delta) {
   stopListening(); stopPlayback();
-  if (state.noteIndex < fragment().notes.length - 1) state.noteIndex++;
+  if (delta < 0) {
+    if (state.noteIndex > 0) state.noteIndex--;
+    else if (state.fragmentIndex > 0) { state.fragmentIndex--; state.noteIndex = fragment().notes.length - 1; }
+  } else if (state.noteIndex < fragment().notes.length - 1) state.noteIndex++;
   else if (state.fragmentIndex < song().fragments.length - 1) { state.fragmentIndex++; state.noteIndex = 0; }
   else { state.fragmentIndex = 0; state.noteIndex = 0; }
   setFeedback('ready'); render();
-});
+}
+
+$('prev-fragment').addEventListener('click', () => moveFragment(-1));
+$('next-fragment').addEventListener('click', () => moveFragment(1));
+$('mobile-song-select').innerHTML = SONGS.map((item, i) => `<option value="${i}">${item.title}</option>`).join('');
+$('mobile-song-select').addEventListener('change', event => selectSong(Number(event.target.value)));
+$('mobile-prev-fragment').addEventListener('click', () => moveFragment(-1));
+$('mobile-next-fragment').addEventListener('click', () => moveFragment(1));
+$('mobile-prev-step').addEventListener('click', () => moveStep(-1));
+$('mobile-next-step').addEventListener('click', () => moveStep(1));
+$('next-note').addEventListener('click', () => moveStep(1));
 $('play-note').addEventListener('click', playCurrentNote);
 $('play-fragment').addEventListener('click', () => playSequence('fragment'));
 $('play-song').addEventListener('click', () => playSequence('song'));
