@@ -5,9 +5,12 @@ const POSITIONS = {
   F3: { label: 'ФА', string: 4, fret: 3, finger: 3, frequency: 174.61 },
   G3: { label: 'СОЛЬ', string: 3, fret: 0, finger: 0, frequency: 196.0 },
   A3: { label: 'ЛЯ', string: 3, fret: 2, finger: 2, frequency: 220.0 },
+  'A#3': { label: 'СИ♭', string: 3, fret: 3, finger: 3, frequency: 233.08 },
   B3: { label: 'СИ', string: 3, fret: 4, finger: 4, frequency: 246.94 },
   C4: { label: 'ДО', string: 2, fret: 1, finger: 1, frequency: 261.63 },
   D4: { label: 'РЕ', string: 2, fret: 3, finger: 3, frequency: 293.66 },
+  E4: { label: 'МИ', string: 1, fret: 0, finger: 0, frequency: 329.63 },
+  F4: { label: 'ФА', string: 1, fret: 1, finger: 1, frequency: 349.23 },
 };
 
 function makeFragments(title, score, size = 7) {
@@ -37,6 +40,19 @@ const BIRCH_FRAGMENTS = [
 const KALINKA_CHORUS = 'A3:2 G3:2 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2 A3 A3 G3:1.5 F3:0.5 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2';
 const KALINKA_VERSE = 'A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C3:2 C3:2 C3:2 C4:2 A3 C4 G3 A3 F3:2 C3:2 A3 C4 G3 A3 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C4:2 B3:2 A3:4';
 
+// Ukrainian folk melody, transposed from G major to C major for beginner guitar.
+// Source: https://notarhiv.ru/detskie/1/1%20%28129%29.pdf
+const GEESE_OPENING = 'B3 A3 G3 F3 C4:2 C4:2 B3 A3 G3 F3 C4:2 C4:2';
+const GEESE_REFRAIN = 'B3 D4:2 D4:2 B3 A3 C4:2 C4:2 A3 F3 A3 B3 F3 G3:2 G3:2';
+
+// Traditional Russian song, simplified to its single-note melody.
+// Source: https://kalimbaplay.ru/tabulaturi/vo-sadu-li
+const GARDEN_MELODY = 'F4 F4 E4 E4 D4 D4 D4 E4 F4 F4 E4 E4 D4:2 D4:2 C4 C4 B3 B3 A3 A3 A3 B3 C4 C4 B3 B3 A3:2 A3:2';
+
+// Traditional melody as transcribed by Jack Campin, in D minor.
+// Source: https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fmirror%2Fcampin.me.uk%2FChalumeau_55%2F0417
+const KOROBEINIKI_MELODY = 'A3:2 E3 F3 G3:2 F3 E3 D3:2 D3 F3 A3:2 G3 F3 E3:3 F3 G3:2 A3:2 F3:2 D3:2 D3:2 G3:3 A#3 D4:2 C4 A#3 A3:3 F3 A3:2 G3 F3 E3:2 E3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
+
 const SONGS = [
   {
     id: 'birch', title: 'Во поле берёза стояла', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
@@ -50,6 +66,23 @@ const SONGS = [
       ...makeFragments('Куплет', KALINKA_VERSE),
       ...makeFragments('Припев снова', KALINKA_CHORUS),
     ],
+  },
+  {
+    id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · учебная версия', icon: '♩',
+    beatMs: 320,
+    fragments: [
+      ...makeFragments('Жили у бабуси', GEESE_OPENING, 6),
+      ...makeFragments('Один серый, другой белый', GEESE_REFRAIN, 7),
+      ...makeFragments('Повтор', GEESE_REFRAIN, 7),
+    ],
+  },
+  {
+    id: 'garden', title: 'Во саду ли, в огороде', subtitle: 'Русская народная мелодия · учебная версия', icon: '♫',
+    beatMs: 285, fragments: makeFragments('Напев', GARDEN_MELODY),
+  },
+  {
+    id: 'korobeiniki', title: 'Коробейники', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
+    beatMs: 235, fragments: makeFragments('Основной напев', KOROBEINIKI_MELODY),
   },
 ];
 
@@ -74,6 +107,7 @@ function noteNoun(count) {
 }
 
 function renderSongs() {
+  document.querySelector('.catalog-count').textContent = String(SONGS.length).padStart(2, '0');
   $('song-list').innerHTML = SONGS.map((item, i) => { const count = item.fragments.reduce((n, f) => n + f.notes.length, 0); return `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${count} ${noteNoun(count)} · ${item.fragments.length} фрагм.</span></span><span class="song-arrow">→</span></button>`; }).join('');
   document.querySelectorAll('[data-song]').forEach(button => button.addEventListener('click', () => {
     const next = Number(button.dataset.song);
@@ -160,7 +194,7 @@ async function ensureAudioContext() {
 async function loadSamples() {
   if (!state.samplePromise) {
     state.samplePromise = Promise.all(Object.keys(POSITIONS).map(async key => {
-      const response = await fetch(`./samples/${key}.wav`);
+      const response = await fetch(`./samples/${encodeURIComponent(key)}.wav`);
       if (!response.ok) throw new Error(`Sample ${key} could not be loaded`);
       state.sampleBuffers[key] = await state.audioContext.decodeAudioData(await response.arrayBuffer());
     })).catch(error => { state.samplePromise = null; throw error; });
@@ -247,7 +281,7 @@ function detectPitch(samples, sampleRate) {
   let energy = 0;
   for (let i = 0; i < windowSize; i++) energy += samples[i] * samples[i];
   if (Math.sqrt(energy / windowSize) < .009) return null;
-  const minTau = Math.floor(sampleRate / 350);
+  const minTau = Math.floor(sampleRate / 400);
   const maxTau = Math.min(Math.floor(sampleRate / 120), samples.length - windowSize - 1);
   const differences = new Float32Array(maxTau + 1);
   for (let tau = 1; tau <= maxTau; tau++) {
