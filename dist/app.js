@@ -62,6 +62,31 @@ const GARDEN_PHRASES = [
 const KOROBEINIKI_FIRST = 'A3:2 E3 F3 G3:2 F3 E3 D3:2 D3 F3 A3:2 G3 F3 E3:3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
 const KOROBEINIKI_SECOND = 'G3:3 A#3 D4:2 C4 A#3 A3:3 F3 A3:2 G3 F3 E3:2 E3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
 
+// Folk tune in F major, transposed down a fourth for the first five frets.
+// Source: https://ru.wikipedia.org/wiki/Чижик-пыжик (LilyPond score).
+const CHIZHIK = 'E4 C4 E4 C4 F4 E4 D4:2 G3 G3 G3 A3:0.5 B3:0.5 C4 C4 C4:2';
+
+// Vocal line of Grechaninov's traditional nursery-rhyme arrangement.
+// Source: https://notarhiv.ru/detskie/8/1%20(1414).pdf
+const PETUSHOK = 'A4 A4 G4:2 A4 A4 E4:2 A4 A4 G4:2 A4 A4 E4:2 A4 A4 G4 G4 A4:2 E4 E4 A4 A4 G4 G4 A4:2 E4 E4 A4 A4 G4:2 A4 A4 E4:2 A4 A4 G4:2 A4 A4 E4:2 A4 A4 G4:2 A4 A4 E4:2';
+
+// Traditional one-pitch counting rhyme; the original vocal line stays on G4.
+// Source: https://notarhiv.ru/detskie/1/1%20(13).pdf
+const ANDREY = 'G4:2 G4:2 G4:2 G4 G4 G4:2 G4 G4 G4:2 G4 G4 G4:2 G4 G4 G4:2 G4:2 G4:2 G4:2 G4 G4 G4:2 G4:2';
+
+// Metlov's traditional song, transposed down a whole tone from G major.
+// Source: https://notarhiv.ru/detskie/1/1%20(7).pdf
+const PO_LUGU = 'D4 F4 A4:3 F4 D4 C4 D4 A4:3 F4 C4 D4 D4 D4 D4 C4 B3 A3 D4 D4 D4 D4 C4 B3 A3:2';
+
+// Solo vocal line of the folk song, transposed down a whole tone from D major.
+// Source: https://notarhiv.ru/detskie/1/1%20(29).pdf
+const KOZLIK = 'E4 E4 F4:2 A4 G4 E4 G4 F4 D4 F4 E4 E4 E4 F4 A4 G4 E4 G4 F4 D4 C4 C4 D4 D4 E4 E4';
+
+// Iordansky's vocal line, transposed down a fifth from G major.
+// Source: https://notarhiv.ru/detskie/3/1%20(586).pdf
+const VOROTA_VERSE = 'C4 E4 E4 E4 D4 C4 E4:2 C4 E4 E4 E4 D4 F4 E4:2';
+const VOROTA_CHORUS = 'D4:2 C4 B3 A3 C4 D4:2 D4:2 C4 B3 A3 C4 D4:2';
+
 const SONGS = [
   {
     id: 'birch', title: 'Во поле берёза стояла', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
@@ -94,6 +119,34 @@ const SONGS = [
     beatMs: 250, fragments: [
       ...makeFragments('Первая часть', KOROBEINIKI_FIRST),
       ...makeFragments('Вторая часть', KOROBEINIKI_SECOND),
+    ],
+  },
+  {
+    id: 'chizhik', title: 'Чижик-пыжик', subtitle: 'Русская народная песенка · учебная версия', icon: '♪',
+    beatMs: 300, fragments: makeFragments('Чижик-пыжик', CHIZHIK),
+  },
+  {
+    id: 'petushok', title: 'Петушок', subtitle: 'Русская народная прибаутка · учебная версия', icon: '♩',
+    beatMs: 295, fragments: makeFragments('Петушок', PETUSHOK),
+  },
+  {
+    id: 'andrey', title: 'Андрей-воробей', subtitle: 'Русская народная прибаутка · одна струна', icon: '♫',
+    beatMs: 260, fragments: makeFragments('Андрей-воробей', ANDREY),
+  },
+  {
+    id: 'po-lugu', title: 'А я по лугу', subtitle: 'Русская народная песня · учебная версия', icon: '♬',
+    beatMs: 325, fragments: makeFragments('А я по лугу', PO_LUGU),
+  },
+  {
+    id: 'kozlik', title: 'Жил-был у бабушки серенький козлик', subtitle: 'Русская народная песня · учебная версия', icon: '♪',
+    beatMs: 285, fragments: makeFragments('Бабушкин козлик', KOZLIK),
+  },
+  {
+    id: 'vorota', title: 'Как у наших у ворот', subtitle: 'Русская народная песня · учебная версия', icon: '♩',
+    beatMs: 275, fragments: [
+      ...makeFragments('Куплет', VOROTA_VERSE),
+      ...makeFragments('Припев', VOROTA_CHORUS),
+      ...makeFragments('Припев снова', VOROTA_CHORUS),
     ],
   },
 ];
