@@ -33,41 +33,10 @@ function makeFragments(title, score, size = 7) {
   return result;
 }
 
-// One complete stanza, transposed down a fifth from the Am score.
-// Source: https://www.ddt-jizdra.ru/2017-03-04-18-18-09/the-learning-materials-notes-folk-m/245-abc-score.html
-const BIRCH_FRAGMENTS = [
-  ...makeFragments('Во поле берёза', 'A3 A3 A3 A3 G3:2 F3 F3 E3:2 D3:2', 5),
-  ...makeFragments('Во поле кудрявая', 'A3 A3 C4 A3 G3 G3 F3 F3 E3:2 D3:2', 5),
-  ...makeFragments('Люли, люли', 'E3:3 F3 G3:2 F3 F3 E3:2 D3:2'),
-  ...makeFragments('Повтор напева', 'E3 E3 E3 F3 G3 G3 F3 F3 E3:2 D3:2'),
-];
-
-// Melody follows a public-domain ABC transcription; accompaniment is original synthesis.
-// https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fsong%2FKalinka_Dm%2F0000
-const KALINKA_CHORUS = 'A3:2 G3:2 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2 A3 A3 G3:1.5 F3:0.5 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2';
-const KALINKA_VERSE = 'A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C3:2 C3:2 C3:2 C4:2 A3 C4 G3 A3 F3:2 C3:2 A3 C4 G3 A3 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C4:2 B3:2 A3:4';
-
 // Familiar F-major register of the folk melody, played within the first five frets.
 // Source: https://urokcifri.ru/uroki-po-pianino-po-ciframi/
 const GEESE_OPENING = 'F4 E4 D4 C4 G4:2 G4:2 F4 E4 D4 C4 G4:2 G4:2';
 const GEESE_REFRAIN = 'F4 A4 A4 F4 E4 G4 G4 E4 D4 E4 F4 D4 C4:2 C4:2';
-
-// Traditional Russian song, simplified to its single-note melody.
-// Source: https://kalimbaplay.ru/tabulaturi/vo-sadu-li
-const GARDEN_PHRASES = [
-  'F4 F4 E4 E4 D4 D4 D4 E4',
-  'F4 F4 E4 E4 D4:2 D4:2',
-  'C4 C4 B3 B3 A3 A3 A3 B3',
-  'C4 C4 B3 B3 A3:2 A3:2',
-];
-
-// Folk tune in F major, transposed down a fourth for the first five frets.
-// Source: https://ru.wikipedia.org/wiki/Чижик-пыжик (LilyPond score).
-const CHIZHIK = 'E4 C4 E4 C4 F4 E4 D4:2 G3 G3 G3 A3:0.5 B3:0.5 C4 C4 C4:2';
-
-// Solo vocal line of the folk song, transposed down a whole tone from D major.
-// Source: https://notarhiv.ru/detskie/1/1%20(29).pdf
-const KOZLIK = 'E4 E4 F4:2 A4 G4 E4 G4 F4 D4 F4 E4 E4 E4 F4 A4 G4 E4 G4 F4 D4 C4 C4 D4 D4 E4 E4';
 
 // John Williams, first two phrases of Hedwig's Theme, transposed from E minor to A minor.
 // The eighth-note durations follow the 3/4 phrasing in this beginner transcription:
@@ -80,20 +49,21 @@ const HEDWIG_OPENING = [
   'G4:4 F#4:2 F4:4 C#4:2 F4:3 E4 D#4:2 D#4:4 C4:2 A3:6',
 ].join(' ');
 
+// First verse and refrain from the children's series Fixiki, transposed from C to F.
+// Melodic contour follows this one-hand teaching chart; durations are adapted for guitar:
+// https://jliza.ru/assets/jlcontent/article-music/top10/ficsici/fiksiki-notyi-cziframi-.pdf
+const FIXIKI_PHRASES = [
+  'F3:2 A3 C4 D4 D4 E4 D4 C4:2',
+  'A3 A3 A3 A#3 A3 G3:3',
+  'C3 E3 G3 A3 A#3 A3 G3:2',
+  'C4 C4 D4 C4 A3 F3:3',
+  'C4 D4 E4 F4 D4 C4 A#3:2',
+  'A#3 A3 G3 A3 A#3 C4:3',
+  'C4 F4 A3 A#3 C4 D4 E4 F4:2',
+  'A#3 A3 A3 G3 G3 F3:4',
+];
+
 const SONGS = [
-  {
-    id: 'birch', title: 'Во поле берёза стояла', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
-    beatMs: 360, fragments: BIRCH_FRAGMENTS,
-  },
-  {
-    id: 'kalinka', title: 'Калинка', subtitle: 'Иван Ларионов · учебная версия мелодии', icon: '♪',
-    beatMs: 270,
-    fragments: [
-      ...makeFragments('Припев', KALINKA_CHORUS),
-      ...makeFragments('Куплет', KALINKA_VERSE),
-      ...makeFragments('Припев снова', KALINKA_CHORUS),
-    ],
-  },
   {
     id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · учебная версия', icon: '♩',
     beatMs: 260,
@@ -104,20 +74,12 @@ const SONGS = [
     ],
   },
   {
-    id: 'garden', title: 'Во саду ли, в огороде', subtitle: 'Русская народная мелодия · учебная версия', icon: '♫',
-    beatMs: 285, fragments: GARDEN_PHRASES.flatMap((phrase, index) => makeFragments(`Напев ${index + 1}`, phrase, 8)),
-  },
-  {
-    id: 'chizhik', title: 'Чижик-пыжик', subtitle: 'Русская народная песенка · учебная версия', icon: '♪',
-    beatMs: 300, fragments: makeFragments('Чижик-пыжик', CHIZHIK),
-  },
-  {
-    id: 'kozlik', title: 'Жил-был у бабушки серенький козлик', subtitle: 'Русская народная песня · учебная версия', icon: '♪',
-    beatMs: 285, fragments: makeFragments('Бабушкин козлик', KOZLIK),
-  },
-  {
     id: 'hedwig', title: 'Гарри Поттер — тема заставки', subtitle: 'Тема Букли · Джон Уильямс · учебный отрывок', icon: '✦', excerpt: true,
     beatMs: 200, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
+  },
+  {
+    id: 'fixiki', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
+    beatMs: 260, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8)),
   },
 ];
 
