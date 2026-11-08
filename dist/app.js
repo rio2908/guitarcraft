@@ -3,6 +3,7 @@ const POSITIONS = {
   D3: { label: 'РЕ', string: 4, fret: 0, finger: 0, frequency: 146.83 },
   E3: { label: 'МИ', string: 4, fret: 2, finger: 2, frequency: 164.81 },
   F3: { label: 'ФА', string: 4, fret: 3, finger: 3, frequency: 174.61 },
+  'F#3': { label: 'ФА♯', string: 4, fret: 4, finger: 4, frequency: 185.0 },
   G3: { label: 'СОЛЬ', string: 3, fret: 0, finger: 0, frequency: 196.0 },
   'G#3': { label: 'СОЛЬ♯', string: 3, fret: 1, finger: 1, frequency: 207.65 },
   A3: { label: 'ЛЯ', string: 3, fret: 2, finger: 2, frequency: 220.0 },
@@ -49,18 +50,19 @@ const HEDWIG_OPENING = [
   'G4:4 F#4:2 F4:4 C#4:2 F4:3 E4 D#4:2 D#4:4 C4:2 A3:6',
 ].join(' ');
 
-// First verse and refrain from the children's series Fixiki, transposed from C to F.
-// Melodic contour follows this one-hand teaching chart; durations are adapted for guitar:
-// https://jliza.ru/assets/jlcontent/article-music/top10/ficsici/fiksiki-notyi-cziframi-.pdf
+// First verse and refrain from the children's series Fixiki, transposed from C to G.
+// Melody and eighth-note durations follow Pavlo Butorin's beginner piano score,
+// starting at bar 5 after the instrumental introduction:
+// https://drive.google.com/file/d/14mEi5JnbrUPrP0fzCoi6BwVd8A6DTnVc/view
 const FIXIKI_PHRASES = [
-  'F3:2 A3 C4 D4 D4 E4 D4 C4:2',
-  'A3 A3 A3 A#3 A3 G3:3',
-  'C3 E3 G3 A3 A#3 A3 G3:2',
-  'C4 C4 D4 C4 A3 F3:3',
-  'C4 D4 E4 F4 D4 C4 A#3:2',
-  'A#3 A3 G3 A3 A#3 C4:3',
-  'C4 F4 A3 A#3 C4 D4 E4 F4:2',
-  'A#3 A3 A3 G3 G3 F3:4',
+  'G3:2 B3:2 D4:2 E4:2 F4:2 E4 D4:5',
+  'B3:2 B3:2 B3:2 C4:2 B3:2 A3:6',
+  'D3:2 F#3:2 A3:2 B3:2 C4:2 B3 A3:5',
+  'D4:2 D4:2 E4:2 D4:2 B3:2 G3:4',
+  'D4:2 E4:2 F#4:2 G4:2 E4:2 D4:2 C4:4',
+  'C4:2 B3:2 A3:2 B3:2 C4 D4:5',
+  'D4:2 G4:2 B3:2 C4:2 D4:2 E4:2 F#4 G4:3',
+  'C4:2 B3:2 B3:2 A3:2 A3:2 G3:2',
 ];
 
 const SONGS = [
@@ -78,8 +80,8 @@ const SONGS = [
     beatMs: 200, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
   },
   {
-    id: 'fixiki', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
-    beatMs: 260, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8)),
+    id: 'fixiki', progressId: 'fixiki-v2', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
+    beatMs: 235, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8).map(part => ({ ...part, pauseAfter: index === 5 ? 470 : false }))),
   },
 ];
 
@@ -93,7 +95,7 @@ function loadProgress() {
 function saveProgress() { localStorage.setItem('guitarcraft-progress-v1', JSON.stringify(state.completed)); }
 function song() { return SONGS[state.songIndex]; }
 function fragment() { return song().fragments[state.fragmentIndex]; }
-function noteKey(fragmentIndex = state.fragmentIndex, noteIndex = state.noteIndex) { return `${song().id}:${fragmentIndex}:${noteIndex}`; }
+function noteKey(fragmentIndex = state.fragmentIndex, noteIndex = state.noteIndex) { return `${song().progressId || song().id}:${fragmentIndex}:${noteIndex}`; }
 function currentNote() { return POSITIONS[fragment().notes[state.noteIndex]]; }
 function stepNoun(count) {
   const lastTwo = count % 100;
