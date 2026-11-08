@@ -27,12 +27,13 @@ function makeFragments(title, score, size = 7) {
   return result;
 }
 
-// One complete stanza melody, transposed down an octave for beginner guitar positions.
+// One complete stanza, transposed down a fifth from the Am score.
+// Source: https://www.ddt-jizdra.ru/2017-03-04-18-18-09/the-learning-materials-notes-folk-m/245-abc-score.html
 const BIRCH_FRAGMENTS = [
-  ...makeFragments('Во поле берёза', 'A3 A3 A3 A3 G3 F3 F3 E3 D3:2', 5),
-  ...makeFragments('Во поле кудрявая', 'A3 A3 C4 A3 G3 G3 F3 F3 E3 D3:2', 5),
-  ...makeFragments('Люли, люли', 'E3 F3 G3 F3 F3 E3 D3:2'),
-  ...makeFragments('Повтор напева', 'E3 F3 G3 F3 F3 E3 D3:2'),
+  ...makeFragments('Во поле берёза', 'A3 A3 A3 A3 G3:2 F3 F3 E3:2 D3:2', 5),
+  ...makeFragments('Во поле кудрявая', 'A3 A3 C4 A3 G3 G3 F3 F3 E3:2 D3:2', 5),
+  ...makeFragments('Люли, люли', 'E3:3 F3 G3:2 F3 F3 E3:2 D3:2'),
+  ...makeFragments('Повтор напева', 'E3 E3 E3 F3 G3 G3 F3 F3 E3:2 D3:2'),
 ];
 
 // Melody follows a public-domain ABC transcription; accompaniment is original synthesis.
@@ -42,16 +43,22 @@ const KALINKA_VERSE = 'A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 A3 C4 B3 A3:0.5 G3:0.5 F
 
 // Ukrainian folk melody, transposed from G major to C major for beginner guitar.
 // Source: https://notarhiv.ru/detskie/1/1%20%28129%29.pdf
-const GEESE_OPENING = 'B3 A3 G3 F3 C4:2 C4:2 B3 A3 G3 F3 C4:2 C4:2';
-const GEESE_REFRAIN = 'B3 D4:2 D4:2 B3 A3 C4:2 C4:2 A3 F3 A3 B3 F3 G3:2 G3:2';
+const GEESE_OPENING = 'C4 B3 A3 G3 D4:2 D4:2 C4 B3 A3 G3 D4:2 D4:2';
+const GEESE_REFRAIN = 'C4 E4 E4 C4 B3 C4 C4 B3 A3 B3 C4 A3 G3:2 G3:2';
 
 // Traditional Russian song, simplified to its single-note melody.
 // Source: https://kalimbaplay.ru/tabulaturi/vo-sadu-li
-const GARDEN_MELODY = 'F4 F4 E4 E4 D4 D4 D4 E4 F4 F4 E4 E4 D4:2 D4:2 C4 C4 B3 B3 A3 A3 A3 B3 C4 C4 B3 B3 A3:2 A3:2';
+const GARDEN_PHRASES = [
+  'F4 F4 E4 E4 D4 D4 D4 E4',
+  'F4 F4 E4 E4 D4:2 D4:2',
+  'C4 C4 B3 B3 A3 A3 A3 B3',
+  'C4 C4 B3 B3 A3:2 A3:2',
+];
 
 // Traditional melody as transcribed by Jack Campin, in D minor.
 // Source: https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fmirror%2Fcampin.me.uk%2FChalumeau_55%2F0417
-const KOROBEINIKI_MELODY = 'A3:2 E3 F3 G3:2 F3 E3 D3:2 D3 F3 A3:2 G3 F3 E3:3 F3 G3:2 A3:2 F3:2 D3:2 D3:2 G3:3 A#3 D4:2 C4 A#3 A3:3 F3 A3:2 G3 F3 E3:2 E3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
+const KOROBEINIKI_FIRST = 'A3:2 E3 F3 G3:2 F3 E3 D3:2 D3 F3 A3:2 G3 F3 E3:3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
+const KOROBEINIKI_SECOND = 'G3:3 A#3 D4:2 C4 A#3 A3:3 F3 A3:2 G3 F3 E3:2 E3 F3 G3:2 A3:2 F3:2 D3:2 D3:2';
 
 const SONGS = [
   {
@@ -69,7 +76,7 @@ const SONGS = [
   },
   {
     id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · учебная версия', icon: '♩',
-    beatMs: 320,
+    beatMs: 260,
     fragments: [
       ...makeFragments('Жили у бабуси', GEESE_OPENING, 6),
       ...makeFragments('Один серый, другой белый', GEESE_REFRAIN, 7),
@@ -78,13 +85,18 @@ const SONGS = [
   },
   {
     id: 'garden', title: 'Во саду ли, в огороде', subtitle: 'Русская народная мелодия · учебная версия', icon: '♫',
-    beatMs: 285, fragments: makeFragments('Напев', GARDEN_MELODY),
+    beatMs: 285, fragments: GARDEN_PHRASES.flatMap((phrase, index) => makeFragments(`Напев ${index + 1}`, phrase, 8)),
   },
   {
     id: 'korobeiniki', title: 'Коробейники', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
-    beatMs: 235, fragments: makeFragments('Основной напев', KOROBEINIKI_MELODY),
+    beatMs: 250, fragments: [
+      ...makeFragments('Первая часть', KOROBEINIKI_FIRST),
+      ...makeFragments('Вторая часть', KOROBEINIKI_SECOND),
+    ],
   },
 ];
+// The score has a two-eighth rest between the two parts.
+SONGS.find(item => item.id === 'korobeiniki').fragments[Math.ceil(KOROBEINIKI_FIRST.split(' ').length / 7) - 1].pauseAfter = 500;
 
 const $ = id => document.getElementById(id);
 const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, sampleBuffers: {}, samplePromise: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackKind: null, playbackToken: 0, activeSources: [], lastDetected: null };
@@ -212,15 +224,16 @@ async function loadSamples() {
   await state.samplePromise;
 }
 
-function pluck(noteId, duration = .55) {
+function pluck(noteId, duration = .55, melody = false) {
   const ctx = state.audioContext;
   const now = ctx.currentTime;
   const sample = state.sampleBuffers[noteId];
   if (!sample) throw new Error(`Missing guitar sample for ${noteId}`);
   const source = ctx.createBufferSource(); source.buffer = sample;
   const gain = ctx.createGain();
-  const releaseAt = now + Math.min(Math.max(duration, .28), sample.duration - .5);
-  const endAt = Math.min(releaseAt + .45, now + sample.duration);
+  const ringTime = Math.min(Math.max(duration, .12), sample.duration - .12);
+  const releaseAt = now + (melody ? ringTime * .78 : ringTime);
+  const endAt = Math.min(releaseAt + (melody ? ringTime * .18 : .35), now + sample.duration);
   gain.gain.setValueAtTime(.0001, now);
   gain.gain.linearRampToValueAtTime(.42, now + .012);
   gain.gain.setValueAtTime(.42, releaseAt);
@@ -274,11 +287,11 @@ async function playSequence(kind) {
       if (token !== state.playbackToken) return;
       state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
       const durationMs = selectedSong.beatMs * part.beats[noteIndex];
-      pluck(part.notes[noteIndex], Math.min(1.1, durationMs / 1000 * .9));
+      pluck(part.notes[noteIndex], durationMs / 1000, true);
       setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · шаг ${noteIndex + 1} из ${part.notes.length}`);
       await pause(durationMs);
     }
-    if (part.pauseAfter) await pause(240);
+    if (part.pauseAfter) await pause(part.pauseAfter === true ? 240 : part.pauseAfter);
   }
   if (token === state.playbackToken) {
     stopPlayback(); state.fragmentIndex = initial.fragmentIndex; state.noteIndex = initial.noteIndex;
