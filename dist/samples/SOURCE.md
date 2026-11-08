@@ -1,6 +1,6 @@
 # Guitar note recordings
 
-The WAV files in this directory are selected notes from the FreePats “Spanish classical guitar” sound bank, version 2019-06-18.
+The WAV files in this directory are selected notes from the FreePats “Spanish classical guitar” sound bank, version 2019-06-18. The C#4 and D#4 samples support the educational opening excerpt of Hedwig's Theme.
 
 - Source: https://freepats.zenvoid.org/Guitar/acoustic-guitar.html
 - Creator: roberto@zenvoid.org for the FreePats project

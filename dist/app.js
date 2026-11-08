@@ -8,7 +8,9 @@ const POSITIONS = {
   'A#3': { label: 'СИ♭', string: 3, fret: 3, finger: 3, frequency: 233.08 },
   B3: { label: 'СИ', string: 3, fret: 4, finger: 4, frequency: 246.94 },
   C4: { label: 'ДО', string: 2, fret: 1, finger: 1, frequency: 261.63 },
+  'C#4': { label: 'ДО♯', string: 2, fret: 2, finger: 2, frequency: 277.18 },
   D4: { label: 'РЕ', string: 2, fret: 3, finger: 3, frequency: 293.66 },
+  'D#4': { label: 'РЕ♯', string: 2, fret: 4, finger: 4, frequency: 311.13 },
   E4: { label: 'МИ', string: 1, fret: 0, finger: 0, frequency: 329.63 },
   F4: { label: 'ФА', string: 1, fret: 1, finger: 1, frequency: 349.23 },
   G4: { label: 'СОЛЬ', string: 1, fret: 3, finger: 3, frequency: 392.0 },
@@ -65,13 +67,10 @@ const CHIZHIK = 'E4 C4 E4 C4 F4 E4 D4:2 G3 G3 G3 A3:0.5 B3:0.5 C4 C4 C4:2';
 // Source: https://notarhiv.ru/detskie/1/1%20(29).pdf
 const KOZLIK = 'E4 E4 F4:2 A4 G4 E4 G4 F4 D4 F4 E4 E4 E4 F4 A4 G4 E4 G4 F4 D4 C4 C4 D4 D4 E4 E4';
 
-// Original beginner melodies for the prototype; these are not film or cartoon scores.
-// Every pitch has a recorded guitar sample and a position within frets 0–5.
-const MAGIC_SCHOOL = 'A3:2 C4 E4:2 D4 C4 B3 A3:2 C4 E4 G4:2 F4 E4 D4 C4:2 B3 C4 D4 E4 F4 E4 D4 C4 B3:2 A3:3';
-const BROOM_FLIGHT = 'C4 E4 G4:2 E4 D4 E4 F4 G4:2 A4 G4 E4 C4:2 E4 F4 G4 A4 G4 E4 D4 E4:2 C4:2 G3 C4 E4 G4:2 E4 D4 C4:3';
-const SECRET_DOOR = 'D3:2 A3 D4:2 F4 E4 D4 C4 A3:2 D4 F4 A4:2 G4 F4 E4 D4:2 F4 E4 D4 C4 A3 C4 D4:2 D3 A3 D4:3';
-const CARTOON_WALK = 'C4 E4 G4 E4 D4 F4 A4 F4 E4 G4 C4 G3 C4:2 E4 G4 A4 G4 E4 C4 D4 F4 D4 B3 C4:2 G3 C4 E4 G4:2 E4 C4:3';
-const SPACE_CAT = 'E3:2 G3 B3 E4:2 D4 B3 A3 G3:2 B3 D4 F4:2 E4 D4 B3 A3:2 G3 A3 B3 D4 E4 D4 B3 G3:2 E3 G3 B3 E4:3';
+// John Williams, opening phrase of Hedwig's Theme, transposed from E minor to D minor.
+// Beginner note sequence: https://easybreezypianotutorials.com/2023/07/03/harry-potter-hedwigs-theme/
+// The excerpt is a single-note educational arrangement, not the orchestral recording.
+const HEDWIG_OPENING = 'A3 D4:3 F4 E4:2 D4:2 A4:2 G4:3 E4:3 D4:3 F4 E4:2 C#4:2 D#4:2 A3:4';
 
 const SONGS = [
   {
@@ -109,24 +108,8 @@ const SONGS = [
     beatMs: 285, fragments: makeFragments('Бабушкин козлик', KOZLIK),
   },
   {
-    id: 'magic-school', title: 'Волшебная школа', subtitle: 'Авторская мелодия · сказочная тема', icon: '✦',
-    beatMs: 340, fragments: makeFragments('Волшебная школа', MAGIC_SCHOOL),
-  },
-  {
-    id: 'broom-flight', title: 'Полёт на метле', subtitle: 'Авторская мелодия · приключение', icon: '✧',
-    beatMs: 270, fragments: makeFragments('Полёт на метле', BROOM_FLIGHT),
-  },
-  {
-    id: 'secret-door', title: 'Тайная дверь', subtitle: 'Авторская мелодия · загадка', icon: '◇',
-    beatMs: 335, fragments: makeFragments('Тайная дверь', SECRET_DOOR),
-  },
-  {
-    id: 'cartoon-walk', title: 'Мультяшная прогулка', subtitle: 'Авторская мелодия · весёлый сюжет', icon: '☀',
-    beatMs: 245, fragments: makeFragments('Мультяшная прогулка', CARTOON_WALK),
-  },
-  {
-    id: 'space-cat', title: 'Космический кот', subtitle: 'Авторская мелодия · фантастика', icon: '☆',
-    beatMs: 285, fragments: makeFragments('Космический кот', SPACE_CAT),
+    id: 'hedwig', title: 'Гарри Поттер — тема заставки', subtitle: 'Тема Букли · Джон Уильямс · учебный отрывок', icon: '✦', excerpt: true,
+    beatMs: 260, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
   },
 ];
 
@@ -196,6 +179,7 @@ function renderFretboard() {
 
 function render() {
   renderSongs();
+  if (!state.playing) $('play-song').innerHTML = `<span class="button-icon">♫</span> ${song().excerpt ? 'Послушать весь отрывок' : 'Послушать всю песню'}`;
   $('song-title').textContent = song().title;
   $('song-subtitle').textContent = song().subtitle;
   $('fragment-number').textContent = state.fragmentIndex + 1;
@@ -222,7 +206,7 @@ function setFeedback(type, detail = '') {
   const messages = {
     ready: ['✦', 'Готово к игре', 'Посмотри на струну и лад, послушай звук и повтори его на гитаре.'],
     loading: ['♫', 'Загружаю звук гитары…', 'Это записи настоящих струн. Обычно загрузка нужна только один раз.'],
-    playingSong: ['♫', 'Играет вся песня', detail || 'Шаги и фрагменты подсвечиваются по ходу мелодии.'],
+    playingSong: ['♫', song().excerpt ? 'Играет весь отрывок' : 'Играет вся песня', detail || 'Шаги и фрагменты подсвечиваются по ходу мелодии.'],
     playingFragment: ['♫', 'Играет фрагмент', detail || 'Шаги подсвечиваются по ходу мелодии.'],
     listening: ['◉', 'Слушаю гитару…', detail || `Сыграй сейчас: ${positionText(currentNote())}.`],
     success: ['✓', 'Отлично, звук совпал!', 'Можно перейти к следующему шагу или повторить этот.'],
@@ -280,7 +264,7 @@ function stopPlayback() {
   state.activeSources = [];
   $('play-note').disabled = false; $('play-fragment').disabled = false; $('play-song').disabled = false;
   $('play-fragment').innerHTML = '<span class="button-icon">♫</span> Весь фрагмент';
-  $('play-song').innerHTML = '<span class="button-icon">♫</span> Послушать всю песню';
+  $('play-song').innerHTML = `<span class="button-icon">♫</span> ${song().excerpt ? 'Послушать весь отрывок' : 'Послушать всю песню'}`;
 }
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
