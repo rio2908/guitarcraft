@@ -58,9 +58,9 @@
                 <div id="fragment-caption" class="fragment-caption">Первый мотив</div>
                 <div id="mobile-step-counter" class="mobile-step-counter">Шаг 1 из 5</div>
               </div>
-              <div class="fragment-controls">
-                <button id="prev-fragment" class="round-button" type="button" aria-label="Предыдущий фрагмент">←</button>
-                <button id="next-fragment" class="round-button" type="button" aria-label="Следующий фрагмент">→</button>
+              <div class="step-arrows" aria-label="Навигация по шагам">
+                <button id="prev-step" class="round-button" type="button" aria-label="Предыдущий шаг">‹</button>
+                <button id="next-step" class="round-button" type="button" aria-label="Следующий шаг">›</button>
               </div>
             </div>
 
@@ -85,12 +85,11 @@
                 <div class="fret-label-row"><span>СТРУНА</span><span>ЛАД 1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
                 <div id="fretboard" class="fretboard" role="img" aria-label="Гриф гитары с указанием струны и лада текущего шага"></div>
               </div>
+              <nav class="fret-fragment-nav" aria-label="Навигация по фрагментам">
+                <button id="prev-fragment" type="button" aria-label="Предыдущий фрагмент">← Фрагмент</button>
+                <button id="next-fragment" type="button" aria-label="Следующий фрагмент">Фрагмент →</button>
+              </nav>
               <div class="fret-legend"><span class="legend-dot">2</span> Номер лада <span class="legend-open">○</span> Открытая струна</div>
-            </div>
-
-            <div class="step-controls" aria-label="Навигация по шагам">
-              <button id="prev-step" class="step-button step-back" type="button">Назад</button>
-              <button id="next-step" class="step-button step-next" type="button">Следующий</button>
             </div>
 
             <div class="action-row">
@@ -113,12 +112,6 @@
             </div>
           </div>
           <p class="workspace-note">Микрофон сравнивает звук. Какую струну и лад выбрать, показывает гриф.</p>
-          <nav class="mobile-nav" aria-label="Навигация по мелодии">
-            <div class="mobile-nav-row">
-              <button id="mobile-prev-fragment" type="button" aria-label="Предыдущий фрагмент">← Фрагмент</button>
-              <button id="mobile-next-fragment" type="button" aria-label="Следующий фрагмент">Фрагмент →</button>
-            </div>
-          </nav>
         </section>
       </main>
     </div>
