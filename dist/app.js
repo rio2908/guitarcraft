@@ -176,8 +176,8 @@ function render() {
   $('mobile-step-counter').textContent = `Шаг ${state.noteIndex + 1} из ${fragment().notes.length}`;
   $('mobile-prev-fragment').disabled = state.fragmentIndex === 0;
   $('mobile-next-fragment').disabled = state.fragmentIndex === song().fragments.length - 1;
-  $('mobile-prev-step').disabled = state.fragmentIndex === 0 && state.noteIndex === 0;
-  $('mobile-next-step').textContent = state.fragmentIndex === song().fragments.length - 1 && state.noteIndex === fragment().notes.length - 1 ? 'Сначала ↺' : 'Шаг →';
+  $('prev-step').disabled = state.fragmentIndex === 0 && state.noteIndex === 0;
+  $('next-step').textContent = state.fragmentIndex === song().fragments.length - 1 && state.noteIndex === fragment().notes.length - 1 ? 'Сначала' : 'Следующий';
   renderNotes();
   const target = currentNote();
   $('position-title').innerHTML = `<span class="position-pill">Струна <strong>${target.string}</strong></span><span class="position-join">→</span><span class="position-pill">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>`;
@@ -186,7 +186,6 @@ function render() {
   const total = song().fragments.reduce((n, f) => n + f.notes.length, 0);
   const count = song().fragments.reduce((n, f, fi) => n + f.notes.filter((_, ni) => state.completed[noteKey(fi, ni)]).length, 0);
   $('progress-text').textContent = `Пройдено шагов: ${count} из ${total}`;
-  $('next-note').textContent = state.noteIndex === fragment().notes.length - 1 && state.fragmentIndex === song().fragments.length - 1 ? 'К первому шагу ↺' : 'Следующий шаг →';
 }
 
 function setFeedback(type, detail = '') {
@@ -400,9 +399,8 @@ $('mobile-song-select').innerHTML = SONGS.map((item, i) => `<option value="${i}"
 $('mobile-song-select').addEventListener('change', event => selectSong(Number(event.target.value)));
 $('mobile-prev-fragment').addEventListener('click', () => moveFragment(-1));
 $('mobile-next-fragment').addEventListener('click', () => moveFragment(1));
-$('mobile-prev-step').addEventListener('click', () => moveStep(-1));
-$('mobile-next-step').addEventListener('click', () => moveStep(1));
-$('next-note').addEventListener('click', () => moveStep(1));
+$('prev-step').addEventListener('click', () => moveStep(-1));
+$('next-step').addEventListener('click', () => moveStep(1));
 $('play-note').addEventListener('click', playCurrentNote);
 $('play-fragment').addEventListener('click', () => playSequence('fragment'));
 $('play-song').addEventListener('click', () => playSequence('song'));

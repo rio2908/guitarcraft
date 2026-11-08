@@ -88,6 +88,11 @@
               <div class="fret-legend"><span class="legend-dot">2</span> Номер лада <span class="legend-open">○</span> Открытая струна</div>
             </div>
 
+            <div class="step-controls" aria-label="Навигация по шагам">
+              <button id="prev-step" class="step-button step-back" type="button">Назад</button>
+              <button id="next-step" class="step-button step-next" type="button">Следующий</button>
+            </div>
+
             <div class="action-row">
               <button id="play-note" class="action-button action-secondary" type="button"><span class="button-icon">▶</span> Послушать звук</button>
               <button id="play-fragment" class="action-button action-secondary" type="button"><span class="button-icon">♫</span> Весь фрагмент</button>
@@ -105,7 +110,6 @@
 
             <div class="lesson-footer">
               <span id="progress-text">Пройдено шагов: 0 из 10</span>
-              <button id="next-note" class="text-button" type="button">Следующий шаг <span aria-hidden="true">→</span></button>
             </div>
           </div>
           <p class="workspace-note">Микрофон сравнивает звук. Какую струну и лад выбрать, показывает гриф.</p>
@@ -113,10 +117,6 @@
             <div class="mobile-nav-row">
               <button id="mobile-prev-fragment" type="button" aria-label="Предыдущий фрагмент">← Фрагмент</button>
               <button id="mobile-next-fragment" type="button" aria-label="Следующий фрагмент">Фрагмент →</button>
-            </div>
-            <div class="mobile-nav-row mobile-nav-steps">
-              <button id="mobile-prev-step" type="button" aria-label="Предыдущий шаг">← Шаг</button>
-              <button id="mobile-next-step" type="button" aria-label="Следующий шаг">Шаг →</button>
             </div>
           </nav>
         </section>
