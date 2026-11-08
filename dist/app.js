@@ -11,6 +11,8 @@ const POSITIONS = {
   D4: { label: 'РЕ', string: 2, fret: 3, finger: 3, frequency: 293.66 },
   E4: { label: 'МИ', string: 1, fret: 0, finger: 0, frequency: 329.63 },
   F4: { label: 'ФА', string: 1, fret: 1, finger: 1, frequency: 349.23 },
+  G4: { label: 'СОЛЬ', string: 1, fret: 3, finger: 3, frequency: 392.0 },
+  A4: { label: 'ЛЯ', string: 1, fret: 5, finger: 4, frequency: 440.0 },
 };
 
 function makeFragments(title, score, size = 7) {
@@ -41,10 +43,10 @@ const BIRCH_FRAGMENTS = [
 const KALINKA_CHORUS = 'A3:2 G3:2 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2 A3 A3 G3:1.5 F3:0.5 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2';
 const KALINKA_VERSE = 'A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C3:2 C3:2 C3:2 C4:2 A3 C4 G3 A3 F3:2 C3:2 A3 C4 G3 A3 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C4:2 B3:2 A3:4';
 
-// Ukrainian folk melody, transposed from G major to C major for beginner guitar.
-// Source: https://notarhiv.ru/detskie/1/1%20%28129%29.pdf
-const GEESE_OPENING = 'C4 B3 A3 G3 D4:2 D4:2 C4 B3 A3 G3 D4:2 D4:2';
-const GEESE_REFRAIN = 'C4 E4 E4 C4 B3 C4 C4 B3 A3 B3 C4 A3 G3:2 G3:2';
+// Familiar F-major register of the folk melody, played within the first five frets.
+// Source: https://urokcifri.ru/uroki-po-pianino-po-ciframi/
+const GEESE_OPENING = 'F4 E4 D4 C4 G4:2 G4:2 F4 E4 D4 C4 G4:2 G4:2';
+const GEESE_REFRAIN = 'F4 A4 A4 F4 E4 G4 G4 E4 D4 E4 F4 D4 C4:2 C4:2';
 
 // Traditional Russian song, simplified to its single-note melody.
 // Source: https://kalimbaplay.ru/tabulaturi/vo-sadu-li
@@ -302,7 +304,7 @@ function detectPitch(samples, sampleRate) {
   let energy = 0;
   for (let i = 0; i < windowSize; i++) energy += samples[i] * samples[i];
   if (Math.sqrt(energy / windowSize) < .009) return null;
-  const minTau = Math.floor(sampleRate / 400);
+  const minTau = Math.floor(sampleRate / 500);
   const maxTau = Math.min(Math.floor(sampleRate / 120), samples.length - windowSize - 1);
   const differences = new Float32Array(maxTau + 1);
   for (let tau = 1; tau <= maxTau; tau++) {
