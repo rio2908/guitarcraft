@@ -4,6 +4,7 @@ const POSITIONS = {
   E3: { label: 'МИ', string: 4, fret: 2, finger: 2, frequency: 164.81 },
   F3: { label: 'ФА', string: 4, fret: 3, finger: 3, frequency: 174.61 },
   G3: { label: 'СОЛЬ', string: 3, fret: 0, finger: 0, frequency: 196.0 },
+  'G#3': { label: 'СОЛЬ♯', string: 3, fret: 1, finger: 1, frequency: 207.65 },
   A3: { label: 'ЛЯ', string: 3, fret: 2, finger: 2, frequency: 220.0 },
   'A#3': { label: 'СИ♭', string: 3, fret: 3, finger: 3, frequency: 233.08 },
   B3: { label: 'СИ', string: 3, fret: 4, finger: 4, frequency: 246.94 },
@@ -13,6 +14,7 @@ const POSITIONS = {
   'D#4': { label: 'РЕ♯', string: 2, fret: 4, finger: 4, frequency: 311.13 },
   E4: { label: 'МИ', string: 1, fret: 0, finger: 0, frequency: 329.63 },
   F4: { label: 'ФА', string: 1, fret: 1, finger: 1, frequency: 349.23 },
+  'F#4': { label: 'ФА♯', string: 1, fret: 2, finger: 2, frequency: 369.99 },
   G4: { label: 'СОЛЬ', string: 1, fret: 3, finger: 3, frequency: 392.0 },
   A4: { label: 'ЛЯ', string: 1, fret: 5, finger: 4, frequency: 440.0 },
 };
@@ -67,10 +69,16 @@ const CHIZHIK = 'E4 C4 E4 C4 F4 E4 D4:2 G3 G3 G3 A3:0.5 B3:0.5 C4 C4 C4:2';
 // Source: https://notarhiv.ru/detskie/1/1%20(29).pdf
 const KOZLIK = 'E4 E4 F4:2 A4 G4 E4 G4 F4 D4 F4 E4 E4 E4 F4 A4 G4 E4 G4 F4 D4 C4 C4 D4 D4 E4 E4';
 
-// John Williams, opening phrase of Hedwig's Theme, transposed from E minor to D minor.
-// Beginner note sequence: https://easybreezypianotutorials.com/2023/07/03/harry-potter-hedwigs-theme/
-// The excerpt is a single-note educational arrangement, not the orchestral recording.
-const HEDWIG_OPENING = 'A3 D4:3 F4 E4:2 D4:2 A4:2 G4:3 E4:3 D4:3 F4 E4:2 C#4:2 D#4:2 A3:4';
+// John Williams, first two phrases of Hedwig's Theme, transposed from E minor to A minor.
+// The eighth-note durations follow the 3/4 phrasing in this beginner transcription:
+// https://easybreezypianotutorials.com/2023/07/03/harry-potter-hedwigs-theme/
+// This single-note educational arrangement stays within the first five guitar frets.
+const HEDWIG_OPENING = [
+  'E3:2 A3:3 C4 B3:2 A3:4 E4:2 D4:6 B3:6',
+  'A3:3 C4 B3:2 G#3:4 A#3:2 E3:10',
+  'E3:2 A3:3 C4 B3:2 A3:4 E4:2',
+  'G4:4 F#4:2 F4:4 C#4:2 F4:3 E4 D#4:2 D#4:4 C4:2 A3:6',
+].join(' ');
 
 const SONGS = [
   {
@@ -109,7 +117,7 @@ const SONGS = [
   },
   {
     id: 'hedwig', title: 'Гарри Поттер — тема заставки', subtitle: 'Тема Букли · Джон Уильямс · учебный отрывок', icon: '✦', excerpt: true,
-    beatMs: 260, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
+    beatMs: 200, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
   },
 ];
 
