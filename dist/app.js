@@ -148,16 +148,17 @@ function renderFretboard() {
   const labels = ['1-я', '2-я', '3-я', '4-я', '5-я', '6-я'];
   $('fretboard').innerHTML = labels.map((label, i) => {
     const string = i + 1;
-    const cells = Array.from({ length: 6 }, (_, fret) => {
-      const active = target.string === string && target.fret === fret;
-      const marker = active ? (fret === 0 ? '<span class="open-marker">○</span>' : `<span class="finger-marker">${target.fret}</span>`) : '';
-      return `<span class="fret-cell ${fret === 0 ? 'open-cell' : ''} ${active ? 'active-fret' : ''}">${marker}</span>`;
+    const cells = Array.from({ length: 5 }, (_, index) => {
+      const fret = index + 1;
+      const active = target.string === string && (target.fret === fret || target.fret === 0 && fret === 1);
+      const marker = active ? (target.fret === 0 ? '<span class="open-marker">○</span>' : `<span class="finger-marker">${target.fret}</span>`) : '';
+      return `<span class="fret-cell ${active ? 'active-fret' : ''}">${marker}</span>`;
     }).join('');
     return `<div class="fret-row ${string === target.string ? 'active-string' : ''}" style="--string-thickness:${Math.max(1, i * .42 + 1)}px"><span class="string-label">${label}</span>${cells}</div>`;
   }).join('');
   $('fretboard').setAttribute('aria-label', `${target.string}-я струна, ${target.fret === 0 ? 'открытая' : `${target.fret}-й лад, ${target.finger}-й палец`}`);
   const scroll = document.querySelector('.fret-scroll');
-  const cell = $('fretboard').children[target.string - 1]?.children[target.fret + 1];
+  const cell = $('fretboard').children[target.string - 1]?.children[Math.max(1, target.fret)];
   if (cell) scroll.scrollLeft = Math.max(0, cell.offsetLeft - scroll.clientWidth / 2 + cell.clientWidth / 2);
 }
 
