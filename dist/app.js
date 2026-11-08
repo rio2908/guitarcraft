@@ -1,30 +1,60 @@
 const POSITIONS = {
+  C3: { label: 'ДО', string: 5, fret: 3, finger: 3, frequency: 130.81 },
   D3: { label: 'РЕ', string: 4, fret: 0, finger: 0, frequency: 146.83 },
   E3: { label: 'МИ', string: 4, fret: 2, finger: 2, frequency: 164.81 },
   F3: { label: 'ФА', string: 4, fret: 3, finger: 3, frequency: 174.61 },
   G3: { label: 'СОЛЬ', string: 3, fret: 0, finger: 0, frequency: 196.0 },
   A3: { label: 'ЛЯ', string: 3, fret: 2, finger: 2, frequency: 220.0 },
+  B3: { label: 'СИ', string: 3, fret: 4, finger: 4, frequency: 246.94 },
+  C4: { label: 'ДО', string: 2, fret: 1, finger: 1, frequency: 261.63 },
+  D4: { label: 'РЕ', string: 2, fret: 3, finger: 3, frequency: 293.66 },
 };
+
+function makeFragments(title, score, size = 7) {
+  const events = score.trim().split(/\s+/).map(token => {
+    const [note, beatText] = token.split(':');
+    if (!POSITIONS[note]) throw new Error(`Unknown pitch ${note}`);
+    return { note, beats: Number(beatText || 1) };
+  });
+  const result = [];
+  for (let i = 0; i < events.length; i += size) {
+    const part = events.slice(i, i + size);
+    result.push({ title: `${title} · часть ${result.length + 1}`, notes: part.map(event => event.note), beats: part.map(event => event.beats), pauseAfter: i + size >= events.length });
+  }
+  return result;
+}
+
+// One complete stanza melody, transposed down an octave for beginner guitar positions.
+const BIRCH_FRAGMENTS = [
+  ...makeFragments('Во поле берёза', 'A3 A3 A3 A3 G3 F3 F3 E3 D3:2', 5),
+  ...makeFragments('Во поле кудрявая', 'A3 A3 C4 A3 G3 G3 F3 F3 E3 D3:2', 5),
+  ...makeFragments('Люли, люли', 'E3 F3 G3 F3 F3 E3 D3:2'),
+  ...makeFragments('Повтор напева', 'E3 F3 G3 F3 F3 E3 D3:2'),
+];
+
+// Melody follows a public-domain ABC transcription; accompaniment is original synthesis.
+// https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fsong%2FKalinka_Dm%2F0000
+const KALINKA_CHORUS = 'A3:2 G3:2 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2 A3 A3 G3:1.5 F3:0.5 E3 F3 G3:2 E3 F3 G3:2 F3 E3 D3:2';
+const KALINKA_VERSE = 'A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 A3 C4 B3 A3:0.5 G3:0.5 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C3:2 C3:2 C3:2 C4:2 A3 C4 G3 A3 F3:2 C3:2 A3 C4 G3 A3 F3:2 C3:2 D3:2 D3 E3 G3 F3 E3 D3 C4:2 B3:2 A3:4';
 
 const SONGS = [
   {
     id: 'birch', title: 'Во поле берёза стояла', subtitle: 'Русская народная мелодия · учебная версия', icon: '♬',
-    fragments: [
-      { title: 'Первый мотив', notes: ['A3', 'A3', 'A3', 'A3', 'G3'] },
-      { title: 'Продолжение мотива', notes: ['G3', 'F3', 'F3', 'E3', 'D3'] },
-    ],
+    beatMs: 360, fragments: BIRCH_FRAGMENTS,
   },
   {
-    id: 'kalinka', title: 'Калинка', subtitle: 'Иван Ларионов · учебная версия мотива', icon: '♪',
+    id: 'kalinka', title: 'Калинка', subtitle: 'Иван Ларионов · учебная версия мелодии', icon: '♪',
+    beatMs: 270,
     fragments: [
-      { title: 'Начало мотива', notes: ['A3', 'G3', 'E3', 'F3', 'G3', 'E3'] },
-      { title: 'Продолжение мотива', notes: ['F3', 'G3', 'F3', 'E3', 'D3'] },
+      ...makeFragments('Припев', KALINKA_CHORUS),
+      ...makeFragments('Куплет', KALINKA_VERSE),
+      ...makeFragments('Припев снова', KALINKA_CHORUS),
     ],
   },
 ];
 
 const $ = id => document.getElementById(id);
-const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackToken: 0, activeSources: [], lastDetected: null };
+const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackKind: null, playbackToken: 0, activeSources: [], lastDetected: null };
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem('guitarcraft-progress-v1')) || {}; }
@@ -35,9 +65,16 @@ function song() { return SONGS[state.songIndex]; }
 function fragment() { return song().fragments[state.fragmentIndex]; }
 function noteKey(fragmentIndex = state.fragmentIndex, noteIndex = state.noteIndex) { return `${song().id}:${fragmentIndex}:${noteIndex}`; }
 function currentNote() { return POSITIONS[fragment().notes[state.noteIndex]]; }
+function noteNoun(count) {
+  const lastTwo = count % 100;
+  if (lastTwo >= 11 && lastTwo <= 14) return 'нот';
+  if (count % 10 === 1) return 'нота';
+  if (count % 10 >= 2 && count % 10 <= 4) return 'ноты';
+  return 'нот';
+}
 
 function renderSongs() {
-  $('song-list').innerHTML = SONGS.map((item, i) => `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${item.fragments.reduce((n, f) => n + f.notes.length, 0)} нот · ${item.fragments.length} фрагмента</span></span><span class="song-arrow">→</span></button>`).join('');
+  $('song-list').innerHTML = SONGS.map((item, i) => { const count = item.fragments.reduce((n, f) => n + f.notes.length, 0); return `<button class="song-option ${i === state.songIndex ? 'active' : ''}" data-song="${i}" type="button" aria-pressed="${i === state.songIndex}"><span class="song-icon">${item.icon}</span><span><span class="song-name">${item.title}</span><span class="song-meta">${count} ${noteNoun(count)} · ${item.fragments.length} фрагм.</span></span><span class="song-arrow">→</span></button>`; }).join('');
   document.querySelectorAll('[data-song]').forEach(button => button.addEventListener('click', () => {
     const next = Number(button.dataset.song);
     if (next === state.songIndex) return;
@@ -98,6 +135,8 @@ function render() {
 function setFeedback(type, detail = '') {
   const messages = {
     ready: ['✦', 'Готово к игре', 'Послушай ноту, затем сыграй её на гитаре и нажми «Проверить».'],
+    playingSong: ['♫', 'Играет вся песня', detail || 'Ноты и фрагменты подсвечиваются по ходу мелодии.'],
+    playingFragment: ['♫', 'Играет фрагмент', detail || 'Ноты подсвечиваются по ходу мелодии.'],
     listening: ['◉', 'Слушаю гитару…', detail || 'Сыграй текущую ноту один раз. У тебя есть несколько секунд.'],
     success: ['✓', 'Верно! Нота совпала', 'Можно перейти к следующей ноте или повторить эту.'],
     retry: ['↻', 'Пока не совпало', detail || 'Попробуй ещё раз: сыграй одну струну без лишнего шума.'],
@@ -138,10 +177,12 @@ function pluck(frequency, duration = .55) {
 }
 
 function stopPlayback() {
-  state.playbackToken++; state.playing = false;
+  state.playbackToken++; state.playing = false; state.playbackKind = null;
   state.activeSources.forEach(source => { try { source.stop(); } catch {} });
   state.activeSources = [];
-  $('play-note').disabled = false; $('play-fragment').disabled = false;
+  $('play-note').disabled = false; $('play-fragment').disabled = false; $('play-song').disabled = false;
+  $('play-fragment').innerHTML = '<span class="button-icon">♫</span> Весь фрагмент';
+  $('play-song').innerHTML = '<span class="button-icon">♫</span> Послушать всю песню';
 }
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -151,17 +192,35 @@ async function playCurrentNote() {
   catch { setFeedback('error', 'Браузер не смог воспроизвести звук.'); }
 }
 
-async function playFragment() {
+async function playSequence(kind) {
+  if (state.playing && state.playbackKind === kind) { stopPlayback(); setFeedback('ready'); return; }
   stopListening(); stopPlayback();
   try { await ensureAudioContext(); } catch { setFeedback('error', 'Браузер не смог воспроизвести звук.'); return; }
-  const token = state.playbackToken; state.playing = true; $('play-fragment').disabled = true; $('play-note').disabled = true;
-  const notes = [...fragment().notes];
-  for (let i = 0; i < notes.length; i++) {
-    if (token !== state.playbackToken) break;
-    state.noteIndex = i; render(); pluck(POSITIONS[notes[i]].frequency, .5);
-    await pause(610);
+  const initial = { fragmentIndex: state.fragmentIndex, noteIndex: state.noteIndex };
+  const token = state.playbackToken;
+  const selectedSong = song();
+  const indices = kind === 'song' ? selectedSong.fragments.map((_, index) => index) : [state.fragmentIndex];
+  state.playing = true; state.playbackKind = kind;
+  $('play-note').disabled = true;
+  $('play-fragment').disabled = kind === 'song';
+  $('play-song').disabled = kind === 'fragment';
+  $(kind === 'song' ? 'play-song' : 'play-fragment').innerHTML = '<span class="button-icon">■</span> Остановить';
+  for (const fragmentIndex of indices) {
+    const part = selectedSong.fragments[fragmentIndex];
+    for (let noteIndex = 0; noteIndex < part.notes.length; noteIndex++) {
+      if (token !== state.playbackToken) return;
+      state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
+      const durationMs = selectedSong.beatMs * part.beats[noteIndex];
+      pluck(POSITIONS[part.notes[noteIndex]].frequency, Math.min(1.1, durationMs / 1000 * .9));
+      setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · нота ${noteIndex + 1} из ${part.notes.length}`);
+      await pause(durationMs);
+    }
+    if (part.pauseAfter) await pause(240);
   }
-  if (token === state.playbackToken) { state.playing = false; $('play-fragment').disabled = false; $('play-note').disabled = false; }
+  if (token === state.playbackToken) {
+    stopPlayback(); state.fragmentIndex = initial.fragmentIndex; state.noteIndex = initial.noteIndex;
+    render(); setFeedback('ready');
+  }
 }
 
 function detectPitch(samples, sampleRate) {
@@ -259,7 +318,8 @@ $('next-note').addEventListener('click', () => {
   setFeedback('ready'); render();
 });
 $('play-note').addEventListener('click', playCurrentNote);
-$('play-fragment').addEventListener('click', playFragment);
+$('play-fragment').addEventListener('click', () => playSequence('fragment'));
+$('play-song').addEventListener('click', () => playSequence('song'));
 $('check-note').addEventListener('click', checkNote);
 window.addEventListener('pagehide', stopListening);
 render();
