@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f4ed" />
+    <meta name="description" content="Прототип обучения простым мелодиям на гитаре по одной ноте." />
+    <title>ГитарКрафт — учи мелодии по одной ноте</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="ГитарКрафт — главная">
+          <span class="brand-mark" aria-hidden="true">✳</span>
+          <span>Гитар<span class="brand-accent">Крафт</span></span>
+        </a>
+        <span class="prototype-badge">ВЕБ-ПРОТОТИП</span>
+      </header>
+
+      <main class="main-layout">
+        <aside class="sidebar" aria-label="Каталог мелодий">
+          <div class="section-eyebrow">МОЯ ПЕРВАЯ МЕЛОДИЯ</div>
+          <h1>Играй знакомое.<br /> <em>Нота за нотой.</em></h1>
+          <p class="intro">Короткие фрагменты, понятные подсказки на грифе и проверка каждой ноты через микрофон.</p>
+
+          <div class="catalog-heading">
+            <span>Мелодии</span>
+            <span class="catalog-count">02</span>
+          </div>
+          <div id="song-list" class="song-list"></div>
+          <p class="catalog-footnote">Учебные версии знакомых мотивов. В этом прототипе показаны короткие фразы.</p>
+        </aside>
+
+        <section class="workspace" aria-label="Урок игры на гитаре">
+          <div class="lesson-card">
+            <div class="lesson-head">
+              <div>
+                <div class="section-eyebrow lesson-eyebrow">ТЕКУЩИЙ УРОК <span class="eyebrow-dot">•</span> ОДНА НОТА ЗА РАЗ</div>
+                <h2 id="song-title">Во поле берёза стояла</h2>
+                <p id="song-subtitle" class="song-subtitle">Русская народная мелодия · учебная версия</p>
+              </div>
+              <div class="lesson-illustration" aria-hidden="true">
+                <span class="illustration-circle"></span>
+                <span class="illustration-neck"></span>
+                <span class="illustration-dot"></span>
+              </div>
+            </div>
+
+            <div class="fragment-bar">
+              <div>
+                <div class="fragment-label">ФРАГМЕНТ <span id="fragment-number">1</span> ИЗ <span id="fragment-total">2</span></div>
+                <div id="fragment-caption" class="fragment-caption">Первый мотив</div>
+              </div>
+              <div class="fragment-controls">
+                <button id="prev-fragment" class="round-button" type="button" aria-label="Предыдущий фрагмент">←</button>
+                <button id="next-fragment" class="round-button" type="button" aria-label="Следующий фрагмент">→</button>
+              </div>
+            </div>
+
+            <div class="notes-section">
+              <div class="section-title-row">
+                <span>Ноты фрагмента</span>
+                <span id="note-counter" class="muted-text">1 / 5</span>
+              </div>
+              <div id="note-list" class="note-list" aria-label="Выбор ноты"></div>
+            </div>
+
+            <div class="fret-card">
+              <div class="fret-card-head">
+                <div>
+                  <div class="section-eyebrow">СЕЙЧАС СЫГРАЙ</div>
+                  <div id="position-title" class="position-title">3-я струна · 2-й лад</div>
+                  <div id="position-hint" class="position-hint">Зажми вторым пальцем</div>
+                </div>
+                <div id="pitch-badge" class="pitch-badge" aria-label="Название ноты">ЛЯ</div>
+              </div>
+              <div class="fret-scroll">
+                <div class="fret-label-row"><span></span><span>ОТКР.</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+                <div id="fretboard" class="fretboard" role="img" aria-label="Гриф гитары с указанием позиции текущей ноты"></div>
+              </div>
+              <div class="fret-legend"><span class="legend-dot">2</span> Палец на ладу <span class="legend-open">○</span> Открытая струна</div>
+            </div>
+
+            <div class="action-row">
+              <button id="play-note" class="action-button action-secondary" type="button"><span class="button-icon">▶</span> Послушать ноту</button>
+              <button id="play-fragment" class="action-button action-secondary" type="button"><span class="button-icon">♫</span> Весь фрагмент</button>
+              <button id="check-note" class="action-button action-primary" type="button"><span class="button-icon mic-icon">◉</span> Проверить ноту</button>
+            </div>
+
+            <div id="feedback" class="feedback" aria-live="polite">
+              <div id="feedback-icon" class="feedback-icon">✦</div>
+              <div>
+                <strong id="feedback-title">Готово к игре</strong>
+                <p id="feedback-detail">Послушай ноту, затем сыграй её на гитаре и нажми «Проверить».</p>
+              </div>
+            </div>
+
+            <div class="lesson-footer">
+              <span id="progress-text">Освоено нот: 0 из 10</span>
+              <button id="next-note" class="text-button" type="button">Следующая нота <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+          <p class="workspace-note">Микрофон проверяет высоту звука. Струна, лад и палец на экране — подсказка для обучения.</p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
