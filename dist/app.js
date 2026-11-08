@@ -54,7 +54,7 @@ const SONGS = [
 ];
 
 const $ = id => document.getElementById(id);
-const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackKind: null, playbackToken: 0, activeSources: [], lastDetected: null };
+const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, sampleBuffers: {}, samplePromise: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackKind: null, playbackToken: 0, activeSources: [], lastDetected: null };
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem('guitarcraft-progress-v1')) || {}; }
@@ -135,12 +135,14 @@ function render() {
 function setFeedback(type, detail = '') {
   const messages = {
     ready: ['✦', 'Готово к игре', 'Послушай ноту, затем сыграй её на гитаре и нажми «Проверить».'],
+    loading: ['♫', 'Загружаю звук гитары…', 'Это записи настоящих струн. Обычно загрузка нужна только один раз.'],
     playingSong: ['♫', 'Играет вся песня', detail || 'Ноты и фрагменты подсвечиваются по ходу мелодии.'],
     playingFragment: ['♫', 'Играет фрагмент', detail || 'Ноты подсвечиваются по ходу мелодии.'],
     listening: ['◉', 'Слушаю гитару…', detail || 'Сыграй текущую ноту один раз. У тебя есть несколько секунд.'],
     success: ['✓', 'Верно! Нота совпала', 'Можно перейти к следующей ноте или повторить эту.'],
     retry: ['↻', 'Пока не совпало', detail || 'Попробуй ещё раз: сыграй одну струну без лишнего шума.'],
     error: ['!', 'Не получилось включить микрофон', detail || 'Проверь разрешение на доступ к микрофону в браузере.'],
+    audioError: ['!', 'Не удалось воспроизвести звук', detail || 'Проверь подключение и попробуй снова.'],
   };
   const [icon, title, text] = messages[type];
   $('feedback').className = `feedback ${type === 'retry' ? 'error' : type}`;
@@ -155,23 +157,32 @@ async function ensureAudioContext() {
   return state.audioContext;
 }
 
-function pluck(frequency, duration = .55) {
+async function loadSamples() {
+  if (!state.samplePromise) {
+    state.samplePromise = Promise.all(Object.keys(POSITIONS).map(async key => {
+      const response = await fetch(`./samples/${key}.wav`);
+      if (!response.ok) throw new Error(`Sample ${key} could not be loaded`);
+      state.sampleBuffers[key] = await state.audioContext.decodeAudioData(await response.arrayBuffer());
+    })).catch(error => { state.samplePromise = null; throw error; });
+  }
+  await state.samplePromise;
+}
+
+function pluck(noteId, duration = .55) {
   const ctx = state.audioContext;
   const now = ctx.currentTime;
-  const length = Math.floor(ctx.sampleRate * Math.min(duration + .35, 1.2));
-  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  const period = Math.max(2, Math.round(ctx.sampleRate / frequency));
-  const ring = Float32Array.from({ length: period }, () => Math.random() * 2 - 1);
-  for (let i = 0; i < length; i++) {
-    const index = i % period;
-    const next = (index + 1) % period;
-    data[i] = ring[index] * Math.exp(-2.5 * i / length);
-    ring[index] = .996 * .5 * (ring[index] + ring[next]);
-  }
-  const source = ctx.createBufferSource(); source.buffer = buffer;
-  const gain = ctx.createGain(); gain.gain.setValueAtTime(.31, now); gain.gain.exponentialRampToValueAtTime(.001, now + length / ctx.sampleRate);
+  const sample = state.sampleBuffers[noteId];
+  if (!sample) throw new Error(`Missing guitar sample for ${noteId}`);
+  const source = ctx.createBufferSource(); source.buffer = sample;
+  const gain = ctx.createGain();
+  const releaseAt = now + Math.min(Math.max(duration, .28), sample.duration - .5);
+  const endAt = Math.min(releaseAt + .45, now + sample.duration);
+  gain.gain.setValueAtTime(.0001, now);
+  gain.gain.linearRampToValueAtTime(.42, now + .012);
+  gain.gain.setValueAtTime(.42, releaseAt);
+  gain.gain.exponentialRampToValueAtTime(.0001, endAt);
   source.connect(gain); gain.connect(ctx.destination); source.start();
+  source.stop(endAt + .01);
   state.activeSources.push(source);
   source.onended = () => { state.activeSources = state.activeSources.filter(item => item !== source); };
 }
@@ -188,16 +199,24 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playCurrentNote() {
   stopListening(); stopPlayback();
-  try { await ensureAudioContext(); pluck(currentNote().frequency, .8); }
-  catch { setFeedback('error', 'Браузер не смог воспроизвести звук.'); }
+  const token = state.playbackToken;
+  const noteId = fragment().notes[state.noteIndex];
+  try {
+    setFeedback('loading');
+    await ensureAudioContext(); await loadSamples();
+    if (token !== state.playbackToken) return;
+    pluck(noteId, .8); setFeedback('ready');
+  } catch { setFeedback('audioError', 'Не удалось загрузить записи гитары. Проверь подключение и попробуй снова.'); }
 }
 
 async function playSequence(kind) {
   if (state.playing && state.playbackKind === kind) { stopPlayback(); setFeedback('ready'); return; }
   stopListening(); stopPlayback();
-  try { await ensureAudioContext(); } catch { setFeedback('error', 'Браузер не смог воспроизвести звук.'); return; }
-  const initial = { fragmentIndex: state.fragmentIndex, noteIndex: state.noteIndex };
   const token = state.playbackToken;
+  try { setFeedback('loading'); await ensureAudioContext(); await loadSamples(); }
+  catch { setFeedback('audioError', 'Не удалось загрузить записи гитары. Проверь подключение и попробуй снова.'); return; }
+  if (token !== state.playbackToken) return;
+  const initial = { fragmentIndex: state.fragmentIndex, noteIndex: state.noteIndex };
   const selectedSong = song();
   const indices = kind === 'song' ? selectedSong.fragments.map((_, index) => index) : [state.fragmentIndex];
   state.playing = true; state.playbackKind = kind;
@@ -211,7 +230,7 @@ async function playSequence(kind) {
       if (token !== state.playbackToken) return;
       state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
       const durationMs = selectedSong.beatMs * part.beats[noteIndex];
-      pluck(POSITIONS[part.notes[noteIndex]].frequency, Math.min(1.1, durationMs / 1000 * .9));
+      pluck(part.notes[noteIndex], Math.min(1.1, durationMs / 1000 * .9));
       setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · нота ${noteIndex + 1} из ${part.notes.length}`);
       await pause(durationMs);
     }
