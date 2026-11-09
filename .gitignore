@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.buildozer/
+bin/
+build/
+.venv/
+guitarcraft-progress.json
+guitarcraft-progress.tmp
