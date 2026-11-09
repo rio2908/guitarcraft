@@ -84,11 +84,14 @@ const ELOCHKA_VERSE = [
 // https://solnet.ee/sol/003/p_009p_1.html
 // https://solnet.ee/sol/003/p_009p_2.html
 // https://jliza.ru/assets/jlcontent/article-music/top10/antoshka/antoshka-notyi-cziframi-.pdf
+const ANTOSHKA_REFRAIN_LINE = 'E4 F#4 E4 D4 C4 B3 D4 C4:2 E4 F#4 E4 D4 C4 B3 D4 C4:2';
 const ANTOSHKA_PHRASES = [
   'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 D4 B3 G3 E4:2 C4:2',
   'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 E4 D4 C4 B3 A3 G3:3',
   'E4 F#4 E4 D4:2 D4 E4 D4 C4:2',
-  'E4 F#4 E4 D4 C4 B3 D4 C4:2 E4 F#4 E4 D4 C4 B3 D4 C4:2',
+  ANTOSHKA_REFRAIN_LINE,
+  'G4 G4 A4 G4 G4 G4 A4 G4:2',
+  ANTOSHKA_REFRAIN_LINE,
   'E4 D4 B3 C4:2 E4 D4 B3 C4:3',
 ];
 
@@ -122,8 +125,8 @@ const SONGS = [
     beatMs: 290, fragments: ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index < 3 && part.pauseAfter ? 260 : false }))),
   },
   {
-    id: 'antoshka', progressId: 'antoshka-v2', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
-    beatMs: 215, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && (index === 1 || index === 3) ? 300 : false }))),
+    id: 'antoshka', progressId: 'antoshka-v3', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
+    beatMs: 240, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && [1, 3, 5].includes(index) ? 300 : false }))),
   },
   {
     id: 'baby-shark', progressId: 'baby-shark-v2', title: 'Baby Shark — Акулёнок', subtitle: 'Три части мелодии · учебная версия', icon: '♪', excerpt: true,
@@ -311,6 +314,7 @@ async function playSequence(kind) {
   const initial = { fragmentIndex: state.fragmentIndex, noteIndex: state.noteIndex };
   const selectedSong = song();
   const indices = kind === 'song' ? selectedSong.fragments.map((_, index) => index) : [state.fragmentIndex];
+  const pace = kind === 'fragment' ? 1.15 : 1;
   state.playing = true; state.playbackKind = kind;
   $('play-note').disabled = true;
   $('play-fragment').disabled = kind === 'song';
@@ -321,8 +325,8 @@ async function playSequence(kind) {
     for (let noteIndex = 0; noteIndex < part.notes.length; noteIndex++) {
       if (token !== state.playbackToken) return;
       state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
-      const durationMs = selectedSong.beatMs * part.beats[noteIndex];
-      pluck(part.notes[noteIndex], selectedSong.beatMs * part.soundBeats[noteIndex] / 1000, true);
+      const durationMs = selectedSong.beatMs * part.beats[noteIndex] * pace;
+      pluck(part.notes[noteIndex], selectedSong.beatMs * part.soundBeats[noteIndex] * pace / 1000, true);
       setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · шаг ${noteIndex + 1} из ${part.notes.length}`);
       await pause(durationMs);
     }
