@@ -46,12 +46,14 @@ const GEESE_REFRAIN = 'F4 A4 A4 F4 E4 G4 G4 E4 D4 E4 F4 D4 C4:2 C4:2';
 // The eighth-note durations follow the 3/4 phrasing in this beginner transcription:
 // https://easybreezypianotutorials.com/2023/07/03/harry-potter-hedwigs-theme/
 // This single-note educational arrangement stays within the first five guitar frets.
-const HEDWIG_OPENING = [
+const HEDWIG_PHRASES = [
   'E3:2 A3:3 C4 B3:2 A3:4 E4:2 D4:6 B3:6',
   'A3:3 C4 B3:2 G#3:4 A#3:2 E3:10',
   'E3:2 A3:3 C4 B3:2 A3:4 E4:2',
   'G4:4 F#4:2 F4:4 C#4:2 F4:3 E4 D#4:2 D#4:4 C4:2 A3:6',
-].join(' ');
+];
+const HEDWIG_OPENING = HEDWIG_PHRASES.join(' ');
+const HEDWIG_REPRISE = HEDWIG_PHRASES.slice(0, 2).join(' ');
 
 // First verse and refrain from the children's series Fixiki, transposed from C to G.
 // Melody and eighth-note durations follow Pavlo Butorin's beginner piano score,
@@ -104,33 +106,39 @@ const BABY_SHARK_SECTIONS = ['Акулёнок', 'Мама-акула', 'Пап�
 
 const SONGS = [
   {
-    id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · учебная версия', icon: '♩',
-    beatMs: 260,
+    id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · два куплета · учебная версия', icon: '♩',
+    beatMs: 280,
     fragments: [
       ...makeFragments('Жили у бабуси', GEESE_OPENING, 6),
       ...makeFragments('Один серый, другой белый', GEESE_REFRAIN, 7),
       ...makeFragments('Повтор', GEESE_REFRAIN, 7),
+      ...makeFragments('Второй куплет', GEESE_OPENING, 6),
+      ...makeFragments('Второй припев', GEESE_REFRAIN, 7),
+      ...makeFragments('Финальный повтор', GEESE_REFRAIN, 7),
     ],
   },
   {
     id: 'hedwig', title: 'Гарри Поттер — тема заставки', subtitle: 'Тема Букли · Джон Уильямс · учебный отрывок', icon: '✦', excerpt: true,
-    beatMs: 200, fragments: makeFragments('Тема Букли', HEDWIG_OPENING),
+    beatMs: 200, fragments: [
+      ...makeFragments('Тема Букли', HEDWIG_OPENING),
+      ...makeFragments('Возвращение темы', HEDWIG_REPRISE),
+    ],
   },
   {
     id: 'fixiki', progressId: 'fixiki-v2', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
     beatMs: 235, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8).map(part => ({ ...part, pauseAfter: index === 5 ? 470 : false }))),
   },
   {
-    id: 'elochka', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · мелодия куплета · учебная версия', icon: '♩',
-    beatMs: 290, fragments: ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index < 3 && part.pauseAfter ? 260 : false }))),
+    id: 'elochka', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · три куплета · учебная версия', icon: '♩',
+    beatMs: 290, fragments: Array.from({ length: 3 }, (_, verseIndex) => ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет ${verseIndex + 1} · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter ? (index < 3 ? 260 : verseIndex < 2 ? 200 : false) : false })))).flat(),
   },
   {
     id: 'antoshka', progressId: 'antoshka-v3', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
-    beatMs: 240, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && [1, 3, 5].includes(index) ? 300 : false }))),
+    beatMs: 260, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && [1, 3, 5].includes(index) ? 300 : false }))),
   },
   {
     id: 'baby-shark', progressId: 'baby-shark-v2', title: 'Baby Shark — Акулёнок', subtitle: 'Три части мелодии · учебная версия', icon: '♪', excerpt: true,
-    beatMs: 220, fragments: [
+    beatMs: 245, fragments: [
       ...BABY_SHARK_SECTIONS.flatMap((title, sectionIndex) => [BABY_SHARK_LINE, BABY_SHARK_LINE, BABY_SHARK_ENDING].flatMap((phrase, phraseIndex) => makeFragments(`${title} · строка ${phraseIndex + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && phraseIndex === 2 && sectionIndex < BABY_SHARK_SECTIONS.length - 1 ? 300 : false })))),
       ...makeFragments('Финал', 'D4 E4 G4:4'),
     ],
