@@ -22,14 +22,17 @@ const POSITIONS = {
 
 function makeFragments(title, score, size = 7) {
   const events = score.trim().split(/\s+/).map(token => {
-    const [note, beatText] = token.split(':');
+    const [note, beatText, soundText] = token.split(':');
     if (!POSITIONS[note]) throw new Error(`Unknown pitch ${note}`);
-    return { note, beats: Number(beatText || 1) };
+    const beats = Number(beatText || 1);
+    const soundBeats = Number(soundText || beats);
+    if (!(beats > 0 && soundBeats > 0 && soundBeats <= beats)) throw new Error(`Invalid timing ${token}`);
+    return { note, beats, soundBeats };
   });
   const result = [];
   for (let i = 0; i < events.length; i += size) {
     const part = events.slice(i, i + size);
-    result.push({ title: `${title} · часть ${result.length + 1}`, notes: part.map(event => event.note), beats: part.map(event => event.beats), pauseAfter: i + size >= events.length });
+    result.push({ title: `${title} · часть ${result.length + 1}`, notes: part.map(event => event.note), beats: part.map(event => event.beats), soundBeats: part.map(event => event.soundBeats), pauseAfter: i + size >= events.length });
   }
   return result;
 }
@@ -75,22 +78,26 @@ const ELOCHKA_VERSE = [
   'F#4 F#4 E4 F#4 D4:3',
 ];
 
-// Vladimir Shainsky's verse and refrain in the first five guitar frets.
-// The optional 6|7 ornament in the beginner transcription is simplified to 6.
+// Vladimir Shainsky's verse and refrain, transposed from C to G major to keep
+// the melody in the middle guitar register. Timings follow the vocal score;
+// note:elapsed-beats:sounding-beats leaves the short sung rests silent.
+// https://solnet.ee/sol/003/p_009p_1.html
+// https://solnet.ee/sol/003/p_009p_2.html
 // https://jliza.ru/assets/jlcontent/article-music/top10/antoshka/antoshka-notyi-cziframi-.pdf
 const ANTOSHKA_PHRASES = [
-  'A4 G4 G4 A4 F4 F4 A4 G4 G4 E4 C4 A4 F4:2',
-  'A4 G4 G4 A4 F4 F4 A4 G4 A4 G4 F4 E4 D4 C4:2',
-  'A4 A4 A4 G4 G4 A4 G4 F4:2',
-  'A4 A4 A4 G4 F4 E4 G4 F4 A4 A4 A4 G4 F4 E4 G4 F4:2',
-  'A4 G4 E4 F4 A4 G4 E4 F4:2',
+  'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 D4 B3 G3 E4:2 C4:2',
+  'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 E4 D4 C4 B3 A3 G3:3',
+  'E4 F#4 E4 D4:2 D4 E4 D4 C4:2',
+  'E4 F#4 E4 D4 C4 B3 D4 C4:2 E4 F#4 E4 D4 C4 B3 D4 C4:2',
+  'E4 D4 B3 C4:2 E4 D4 B3 C4:3',
 ];
 
 // Single-note beginner melody of Baby Shark in G major. The source spells
 // out the repeated D-E-G hook and the closing G-G-F# figure:
 // https://www.piano-keyboard-guide.com/piano-notes-for-pinkfong-baby-shark-song-easy-piano-tutorial/amp/
-const BABY_SHARK_LINE = 'D4:2 E4:2 G4:2 G4 G4 G4 G4 G4 G4';
-const BABY_SHARK_ENDING = 'D4:2 E4:2 G4:2 G4 G4 G4 G4 G4 G4 G4 G4 F#4:3';
+const BABY_SHARK_LINE = 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4';
+const BABY_SHARK_ENDING = 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4 G4 G4 F#4:3';
+const BABY_SHARK_SECTIONS = ['Акулёнок', 'Мама-акула', 'Папа-акула'];
 
 const SONGS = [
   {
@@ -115,12 +122,15 @@ const SONGS = [
     beatMs: 290, fragments: ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index < 3 && part.pauseAfter ? 260 : false }))),
   },
   {
-    id: 'antoshka', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
-    beatMs: 235, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index === 1 && part.pauseAfter ? 380 : false }))),
+    id: 'antoshka', progressId: 'antoshka-v2', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
+    beatMs: 215, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && (index === 1 || index === 3) ? 300 : false }))),
   },
   {
-    id: 'baby-shark', title: 'Baby Shark — Акулёнок', subtitle: 'Основной мотив · учебная версия', icon: '♪', excerpt: true,
-    beatMs: 225, fragments: [BABY_SHARK_LINE, BABY_SHARK_LINE, BABY_SHARK_ENDING].flatMap((phrase, index) => makeFragments(`Мотив · повтор ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: false }))),
+    id: 'baby-shark', progressId: 'baby-shark-v2', title: 'Baby Shark — Акулёнок', subtitle: 'Три части мелодии · учебная версия', icon: '♪', excerpt: true,
+    beatMs: 220, fragments: [
+      ...BABY_SHARK_SECTIONS.flatMap((title, sectionIndex) => [BABY_SHARK_LINE, BABY_SHARK_LINE, BABY_SHARK_ENDING].flatMap((phrase, phraseIndex) => makeFragments(`${title} · строка ${phraseIndex + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && phraseIndex === 2 && sectionIndex < BABY_SHARK_SECTIONS.length - 1 ? 300 : false })))),
+      ...makeFragments('Финал', 'D4 E4 G4:4'),
+    ],
   },
 ];
 
@@ -312,7 +322,7 @@ async function playSequence(kind) {
       if (token !== state.playbackToken) return;
       state.fragmentIndex = fragmentIndex; state.noteIndex = noteIndex; render();
       const durationMs = selectedSong.beatMs * part.beats[noteIndex];
-      pluck(part.notes[noteIndex], durationMs / 1000, true);
+      pluck(part.notes[noteIndex], selectedSong.beatMs * part.soundBeats[noteIndex] / 1000, true);
       setFeedback(kind === 'song' ? 'playingSong' : 'playingFragment', `Фрагмент ${fragmentIndex + 1} из ${selectedSong.fragments.length} · шаг ${noteIndex + 1} из ${part.notes.length}`);
       await pause(durationMs);
     }
