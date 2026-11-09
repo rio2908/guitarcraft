@@ -46,28 +46,29 @@ def matches_note(frequency, expected, tolerance_cents=45):
     return frequency is not None and abs(1200 * math.log2(frequency / expected)) <= tolerance_cents
 
 
-def request_microphone(result_queue):
+def request_microphone(result_queue, token):
     if sys.platform != "android" and "ANDROID_ARGUMENT" not in os.environ:
-        result_queue.put(("error", "Проверка звука доступна в Android-приложении."))
+        result_queue.put((token, "error", "Проверка звука доступна в Android-приложении."))
         return
     try:
         from android.permissions import Permission, check_permission, request_permissions
 
         if check_permission(Permission.RECORD_AUDIO):
-            result_queue.put(("permission", True))
+            result_queue.put((token, "permission", True))
         else:
             def permission_result(permissions, grants):
-                result_queue.put(("permission", bool(grants) and all(grants)))
+                result_queue.put((token, "permission", bool(grants) and all(grants)))
 
             request_permissions([Permission.RECORD_AUDIO], permission_result)
     except Exception as error:
-        result_queue.put(("error", f"Микрофон недоступен: {error}"))
+        result_queue.put((token, "error", f"Микрофон недоступен: {error}"))
 
 
 class AndroidRecorder:
-    def __init__(self, expected, result_queue):
+    def __init__(self, expected, result_queue, token):
         self.expected = expected
         self.result_queue = result_queue
+        self.token = token
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self._record, daemon=True)
 
@@ -116,15 +117,15 @@ class AndroidRecorder:
                 if matches_note(frequency, self.expected):
                     matches += 1
                     if matches >= 2:
-                        self.result_queue.put(("success", frequency))
+                        self.result_queue.put((self.token, "success", frequency))
                         return
                 else:
                     matches = 0
             if not self.stop_event.is_set():
-                self.result_queue.put(("retry", heard))
+                self.result_queue.put((self.token, "retry", heard))
         except Exception as error:
             if not self.stop_event.is_set():
-                self.result_queue.put(("error", f"Микрофон недоступен: {error}"))
+                self.result_queue.put((self.token, "error", f"Микрофон недоступен: {error}"))
         finally:
             if recorder is not None:
                 try:

@@ -1,7 +1,9 @@
+from array import array
 import math
 import tempfile
 import unittest
 from pathlib import Path
+import wave
 
 from game_logic import Game, ROOT, load_catalog, read_progress
 from microphone import detect_pitch, matches_note
@@ -49,6 +51,16 @@ class PitchTests(unittest.TestCase):
 
     def test_silence(self):
         self.assertIsNone(detect_pitch([0] * 2048))
+
+    def test_real_guitar_samples(self):
+        for note, position in load_catalog()["positions"].items():
+            with wave.open(str(ROOT / "assets" / "samples" / f"{note}.wav")) as recording:
+                rate = recording.getframerate()
+                recording.setpos(int(rate * 0.25))
+                pcm = array("h")
+                pcm.frombytes(recording.readframes(int(rate * 0.15)))
+                samples = [pcm[int(index * rate / 16000)] for index in range(2048)]
+            self.assertTrue(matches_note(detect_pitch(samples), position["frequency"]), note)
 
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ class GuitarApp:
         self.mic_events = Queue()
         self.recorder = None
         self.listening = False
+        self.listen_token = 0
         self.last_touch = None
 
     def font(self, size, bold=False):
@@ -217,6 +218,7 @@ class GuitarApp:
             self.channel.stop()
 
     def stop_listening(self):
+        self.listen_token += 1
         if self.recorder:
             self.recorder.stop()
             self.recorder = None
@@ -284,39 +286,38 @@ class GuitarApp:
         self.listening = True
         self.feedback = "Слушаю гитару… Сыграй одну ноту."
         self.feedback_color = GREEN
-        request_microphone(self.mic_events)
+        request_microphone(self.mic_events, self.listen_token)
 
     def update_microphone(self):
         while True:
             try:
-                kind, value = self.mic_events.get_nowait()
+                token, kind, value = self.mic_events.get_nowait()
             except Empty:
                 break
+            if token != self.listen_token or not self.listening:
+                continue
             if kind == "permission":
-                if value and self.listening:
-                    self.recorder = AndroidRecorder(self.game.position["frequency"], self.mic_events)
+                if value:
+                    self.recorder = AndroidRecorder(self.game.position["frequency"], self.mic_events, token)
                     self.recorder.start()
                 else:
                     self.stop_listening()
                     self.feedback = "Разреши доступ к микрофону и попробуй снова."
                     self.feedback_color = ORANGE
             elif kind == "success":
-                if self.listening:
-                    self.stop_listening()
-                    self.game.mark_current()
-                    self.feedback = "Отлично! Звук совпал."
-                    self.feedback_color = GREEN
+                self.stop_listening()
+                self.game.mark_current()
+                self.feedback = "Отлично! Звук совпал."
+                self.feedback_color = GREEN
             elif kind == "retry":
-                if self.listening:
-                    self.stop_listening()
-                    self.feedback = ("Пока не совпало. Попробуй ещё раз." if value
-                                     else "Не услышал звук. Поднеси гитару ближе.")
-                    self.feedback_color = ORANGE
+                self.stop_listening()
+                self.feedback = ("Пока не совпало. Попробуй ещё раз." if value
+                                 else "Не услышал звук. Поднеси гитару ближе.")
+                self.feedback_color = ORANGE
             elif kind == "error":
-                if self.listening:
-                    self.stop_listening()
-                    self.feedback = value
-                    self.feedback_color = ORANGE
+                self.stop_listening()
+                self.feedback = value
+                self.feedback_color = ORANGE
 
     def activate(self, name):
         if name == "choose":
@@ -381,6 +382,10 @@ class GuitarApp:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.APP_WILLENTERBACKGROUND:
+                    self.stop_playback()
+                    if self.recorder:
+                        self.stop_listening()
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     if self.chooser:
                         self.chooser = False
