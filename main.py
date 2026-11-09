@@ -30,6 +30,14 @@ WOOD_DARK = (87, 61, 37)
 SHADOW = (25, 31, 28)
 
 
+def is_background_event(event_type, pygame_api=pygame):
+    """Accept lifecycle events available in the packaged pygame version."""
+    return event_type in tuple(
+        getattr(pygame_api, name, -1)
+        for name in ("APP_WILLENTERBACKGROUND", "APP_DIDENTERBACKGROUND", "WINDOWFOCUSLOST")
+    )
+
+
 class GuitarApp:
     def __init__(self):
         pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -449,7 +457,7 @@ class GuitarApp:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                elif event.type == pygame.APP_WILLENTERBACKGROUND:
+                elif is_background_event(event.type):
                     self.stop_playback()
                     if self.recorder:
                         self.stop_listening()

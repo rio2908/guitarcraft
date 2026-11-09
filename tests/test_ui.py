@@ -2,6 +2,7 @@
 
 import os
 from queue import Queue
+from types import SimpleNamespace
 import unittest
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -10,10 +11,15 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 import pygame
 
-from main import GuitarApp
+from main import GuitarApp, is_background_event
 
 
 class ScreenTests(unittest.TestCase):
+    def test_android_lifecycle_check_supports_packaged_pygame_2_1_0(self):
+        old_pygame = SimpleNamespace(QUIT=1, WINDOWFOCUSLOST=2)
+        self.assertFalse(is_background_event(old_pygame.QUIT, old_pygame))
+        self.assertTrue(is_background_event(old_pygame.WINDOWFOCUSLOST, old_pygame))
+
     def setUp(self):
         self.app = GuitarApp()
         self.app.game.completed = {}
