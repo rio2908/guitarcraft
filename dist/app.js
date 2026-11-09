@@ -158,7 +158,26 @@ const $ = id => document.getElementById(id);
 const state = { songIndex: 0, fragmentIndex: 0, noteIndex: 0, completed: loadProgress(), audioContext: null, sampleBuffers: {}, samplePromise: null, stream: null, analyser: null, listenTimer: null, frame: null, playing: false, playbackKind: null, playbackToken: 0, activeSources: [], lastDetected: null };
 
 function loadProgress() {
-  try { return JSON.parse(localStorage.getItem('guitarcraft-progress-v1')) || {}; }
+  try {
+    const completed = JSON.parse(localStorage.getItem('guitarcraft-progress-v1')) || {};
+    const oldLayouts = [
+      { id: 'geese', current: 'geese-v2', sizes: [6, 6, 7, 7, 7, 7, 6, 6, 7, 7, 7, 7] },
+      { id: 'elochka', current: 'elochka-v2', sizes: Array(3).fill([7, 2, 6, 7, 1, 5]).flat() },
+    ];
+    let changed = false;
+    for (const layout of oldLayouts) {
+      const current = SONGS.find(item => item.id === layout.id);
+      if (!current || layout.sizes.reduce((sum, size) => sum + size, 0) !== current.fragments.reduce((sum, part) => sum + part.notes.length, 0)) continue;
+      const oldSteps = layout.sizes.flatMap((size, fragmentIndex) => Array.from({ length: size }, (_, noteIndex) => Boolean(completed[`${layout.id}:${fragmentIndex}:${noteIndex}`])));
+      let step = 0;
+      current.fragments.forEach((part, fragmentIndex) => part.notes.forEach((_, noteIndex) => {
+        const key = `${layout.current}:${fragmentIndex}:${noteIndex}`;
+        if (oldSteps[step++] && !completed[key]) { completed[key] = true; changed = true; }
+      }));
+    }
+    if (changed) localStorage.setItem('guitarcraft-progress-v1', JSON.stringify(completed));
+    return completed;
+  }
   catch { return {}; }
 }
 function saveProgress() { localStorage.setItem('guitarcraft-progress-v1', JSON.stringify(state.completed)); }
