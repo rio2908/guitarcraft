@@ -15,3 +15,4 @@ if ! adb shell pidof "$package" >/dev/null; then
 fi
 
 echo 'GuitarCraft stayed open for 20 seconds'
+adb exec-out screencap -p > "$RUNNER_TEMP/guitarcraft-screen.png"

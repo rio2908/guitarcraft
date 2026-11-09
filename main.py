@@ -38,12 +38,21 @@ def is_background_event(event_type, pygame_api=pygame):
     )
 
 
+def to_canvas_point(point, display_size):
+    """Map a physical screen touch back to the 400×860 game canvas."""
+    return (int(point[0] * WIDTH / display_size[0]),
+            int(point[1] * HEIGHT / display_size[1]))
+
+
 class GuitarApp:
     def __init__(self):
         pygame.mixer.pre_init(44100, -16, 2, 512)
         pygame.init()
-        flags = pygame.FULLSCREEN | pygame.SCALED if sys.platform == "android" else 0
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
+        if sys.platform == "android" or "ANDROID_ARGUMENT" in os.environ:
+            self.display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        else:
+            self.display = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.Surface((WIDTH, HEIGHT))
         pygame.display.set_caption("ГитарКрафт")
         self.background = self.make_background()
         self.clock = pygame.time.Clock()
@@ -169,6 +178,11 @@ class GuitarApp:
             self.draw_help()
         elif self.chooser:
             self.draw_chooser()
+        display_size = self.display.get_size()
+        if display_size == (WIDTH, HEIGHT):
+            self.display.blit(self.screen, (0, 0))
+        else:
+            pygame.transform.scale(self.screen, display_size, self.display)
         pygame.display.flip()
 
     def draw_steps(self, part):
@@ -469,7 +483,7 @@ class GuitarApp:
                     else:
                         running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self.touch_event(event.pos)
+                    self.touch_event(to_canvas_point(event.pos, self.display.get_size()))
                 elif event.type == pygame.FINGERDOWN:
                     point = (int(event.x * WIDTH), int(event.y * HEIGHT))
                     self.touch_event(point)
