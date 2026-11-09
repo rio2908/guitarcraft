@@ -81,23 +81,6 @@ const ELOCHKA_VERSE = [
   'F#4 F#4 E4 F#4 D4:3',
 ];
 
-// Vladimir Shainsky's verse and refrain, transposed from C to G major to keep
-// the melody in the middle guitar register. Timings follow the vocal score;
-// note:elapsed-beats:sounding-beats leaves the short sung rests silent.
-// https://solnet.ee/sol/003/p_009p_1.html
-// https://solnet.ee/sol/003/p_009p_2.html
-// https://jliza.ru/assets/jlcontent/article-music/top10/antoshka/antoshka-notyi-cziframi-.pdf
-const ANTOSHKA_REFRAIN_LINE = 'E4 F#4 E4 D4 C4 B3 D4 C4:2 E4 F#4 E4 D4 C4 B3 D4 C4:2';
-const ANTOSHKA_PHRASES = [
-  'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 D4 B3 G3 E4:2 C4:2',
-  'E4 D4 D4:2:1 E4 C4 C4:2:1 E4 D4 E4 D4 C4 B3 A3 G3:3',
-  'E4 F#4 E4 D4:2 D4 E4 D4 C4:2',
-  ANTOSHKA_REFRAIN_LINE,
-  'G4 G4 A4 G4 G4 G4 A4 G4:2',
-  ANTOSHKA_REFRAIN_LINE,
-  'E4 D4 B3 C4:2 E4 D4 B3 C4:3',
-];
-
 // The longer beginner arrangement follows the three repeated lines and short
 // cadence of each verse, then the semitone key change at "Run away".
 // https://www.pianokeyboardnotes.com/baby-shark-piano.html
@@ -137,10 +120,6 @@ const SONGS = [
   {
     id: 'elochka', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · три куплета · учебная версия', icon: '♩',
     beatMs: 290, fragments: Array.from({ length: 3 }, (_, verseIndex) => ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет ${verseIndex + 1} · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter ? (index < 3 ? 260 : verseIndex < 2 ? 200 : false) : false })))).flat(),
-  },
-  {
-    id: 'antoshka', progressId: 'antoshka-v3', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
-    beatMs: 260, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && [1, 3, 5].includes(index) ? 300 : false }))),
   },
   {
     id: 'baby-shark', progressId: 'baby-shark-v3', title: 'Baby Shark — Акулёнок', subtitle: 'Шесть частей мелодии · учебная версия', icon: '♪', excerpt: true,
