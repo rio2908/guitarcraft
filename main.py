@@ -9,21 +9,25 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import pygame
 
 from game_logic import Game
+from instructions import HELP_STEPS
 from microphone import AndroidRecorder, request_microphone
 
 
 ROOT = Path(__file__).resolve().parent
 WIDTH, HEIGHT = 400, 860
-BACKGROUND = (247, 246, 240)
-PANEL = (252, 252, 249)
-GREEN = (28, 80, 61)
-GREEN_PALE = (227, 238, 225)
-GREEN_LIGHT = (118, 158, 129)
-TEXT = (29, 62, 49)
-MUTED = (121, 145, 130)
-LINE = (207, 218, 207)
-ORANGE = (237, 121, 75)
-WHITE = (255, 255, 255)
+BACKGROUND = (46, 54, 52)
+PANEL = (206, 204, 184)
+GREEN = (72, 132, 61)
+GREEN_PALE = (139, 185, 91)
+GREEN_LIGHT = (183, 211, 139)
+TEXT = (36, 44, 32)
+MUTED = (89, 100, 78)
+LINE = (50, 55, 42)
+ORANGE = (234, 166, 64)
+WHITE = (248, 245, 222)
+WOOD = (134, 94, 57)
+WOOD_DARK = (87, 61, 37)
+SHADOW = (25, 31, 28)
 
 
 class GuitarApp:
@@ -33,6 +37,7 @@ class GuitarApp:
         flags = pygame.FULLSCREEN | pygame.SCALED if sys.platform == "android" else 0
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
         pygame.display.set_caption("ГитарКрафт")
+        self.background = self.make_background()
         self.clock = pygame.time.Clock()
         self.fonts = {}
         self.game = Game()
@@ -40,6 +45,7 @@ class GuitarApp:
         self.channel = pygame.mixer.Channel(0) if pygame.mixer.get_init() else None
         self.buttons = []
         self.chooser = False
+        self.help_open = False
         self.feedback = "Посмотри на струну и лад, затем сыграй звук."
         self.feedback_color = GREEN
         self.play_kind = None
@@ -52,6 +58,22 @@ class GuitarApp:
         self.listening = False
         self.listen_token = 0
         self.last_touch = None
+
+    def make_background(self):
+        surface = pygame.Surface((WIDTH, HEIGHT))
+        surface.fill(BACKGROUND)
+        for y in range(75, HEIGHT, 24):
+            for x in range(0, WIDTH, 24):
+                if (x // 24 * 5 + y // 24 * 3) % 7 == 0:
+                    pygame.draw.rect(surface, (54, 63, 58), (x + 4, y + 5, 8, 8))
+        pygame.draw.rect(surface, WOOD_DARK, (0, 0, WIDTH, 64))
+        pygame.draw.rect(surface, GREEN, (0, 0, WIDTH, 45))
+        for x in range(0, WIDTH, 16):
+            if (x // 16) % 3 != 1:
+                pygame.draw.rect(surface, GREEN_PALE, (x, 0, 8, 5))
+            pygame.draw.rect(surface, (106, 75, 43), (x + 4, 51, 6, 6))
+        pygame.draw.rect(surface, LINE, (0, 61, WIDTH, 3))
+        return surface
 
     def font(self, size, bold=False):
         key = (size, bold)
@@ -70,7 +92,7 @@ class GuitarApp:
                 font = self.font(size, bold)
             while font.size(text)[0] > limit and text:
                 text = text[:-2] + "…"
-        image = font.render(text, True, color)
+        image = font.render(text, False, color)
         rect = image.get_rect()
         if align == "center":
             rect.center = (x, y)
@@ -81,13 +103,23 @@ class GuitarApp:
         self.screen.blit(image, rect)
 
     def rounded(self, rect, fill, border=None, radius=14):
-        pygame.draw.rect(self.screen, fill, rect, border_radius=radius)
-        if border:
-            pygame.draw.rect(self.screen, border, rect, 1, border_radius=radius)
+        """Draw an original pixel-block panel with a raised edge."""
+        pygame.draw.rect(self.screen, SHADOW, rect.move(4, 5))
+        pygame.draw.rect(self.screen, fill, rect)
+        pygame.draw.rect(self.screen, border or LINE, rect, 3)
+        highlight = tuple(min(255, channel + 30) for channel in fill)
+        shade = tuple(max(0, channel - 40) for channel in fill)
+        pygame.draw.line(self.screen, highlight, (rect.left + 4, rect.top + 4),
+                         (rect.right - 5, rect.top + 4), 3)
+        pygame.draw.line(self.screen, highlight, (rect.left + 4, rect.top + 4),
+                         (rect.left + 4, rect.bottom - 5), 3)
+        pygame.draw.line(self.screen, shade, (rect.left + 5, rect.bottom - 5),
+                         (rect.right - 5, rect.bottom - 5), 3)
+        pygame.draw.line(self.screen, shade, (rect.right - 5, rect.top + 5),
+                         (rect.right - 5, rect.bottom - 5), 3)
 
-    def button(self, name, rect, title, fill=WHITE, color=GREEN, size=17, enabled=True):
-        border = LINE if fill == WHITE else None
-        self.rounded(rect, fill if enabled else (238, 240, 235), border, 12)
+    def button(self, name, rect, title, fill=WHITE, color=TEXT, size=17, enabled=True):
+        self.rounded(rect, fill if enabled else (139, 141, 126), LINE, 0)
         self.label(title, rect.centerx, rect.centery, size,
                    color if enabled else MUTED, bold=True, align="center", limit=rect.width - 10)
         if enabled:
@@ -95,16 +127,17 @@ class GuitarApp:
 
     def draw(self):
         self.buttons = []
-        self.screen.fill(BACKGROUND)
-        self.label("ГитарКрафт", 17, 20, 29, GREEN, True)
-        self.button("choose", pygame.Rect(247, 15, 137, 43), "Мелодии", GREEN_PALE)
+        self.screen.blit(self.background, (0, 0))
+        self.label("ГитарКрафт", 17, 17, 28, WHITE, True)
+        self.button("help", pygame.Rect(197, 11, 42, 43), "?", PANEL, size=24)
+        self.button("choose", pygame.Rect(247, 11, 137, 43), "Мелодии", GREEN_PALE)
 
         song = self.game.song
         part = self.game.fragment
         position = self.game.position
-        self.label(song["title"], 18, 78, 25, TEXT, True, limit=365)
-        self.label(part["lyricLine"] or part["title"], 18, 112, 18, MUTED, limit=365)
-        self.label(f"Шаг {self.game.note_index + 1} из {len(part['notes'])}", 18, 139, 17, GREEN)
+        self.label(song["title"], 18, 78, 25, WHITE, True, limit=365)
+        self.label(part["lyricLine"] or part["title"], 18, 112, 18, GREEN_LIGHT, limit=365)
+        self.label(f"Шаг {self.game.note_index + 1} из {len(part['notes'])}", 18, 139, 17, WHITE)
         self.draw_steps(part)
         self.draw_fretboard(position)
 
@@ -117,14 +150,16 @@ class GuitarApp:
         self.button("song", pygame.Rect(14, 681, 180, 54), song_label, GREEN_PALE, size=18)
         check_label = "Слушаю..." if self.listening else "Проверить"
         self.button("check", pygame.Rect(206, 681, 180, 54), check_label,
-                    ORANGE, WHITE, size=18, enabled=not self.listening)
+                    ORANGE, TEXT, size=18, enabled=not self.listening)
 
         self.rounded(pygame.Rect(14, 748, 372, 74), PANEL, LINE)
         self.label(self.feedback, 26, 763, 17, self.feedback_color, limit=344)
         done, total = self.game.progress()
-        self.label(f"Пройдено: {done} из {total}", 18, 833, 15, MUTED)
+        self.label(f"Пройдено: {done} из {total}", 18, 833, 15, WHITE)
 
-        if self.chooser:
+        if self.help_open:
+            self.draw_help()
+        elif self.chooser:
             self.draw_chooser()
         pygame.display.flip()
 
@@ -139,15 +174,15 @@ class GuitarApp:
             rect = pygame.Rect(x, 169, right - x, 36)
             active = index == self.game.note_index
             done = self.game.key(self.game.fragment_index, index) in self.game.completed
-            fill = ORANGE if active else GREEN_PALE if done else WHITE
-            self.rounded(rect, fill, LINE if not active else None, 10)
+            fill = ORANGE if active else GREEN_PALE if done else PANEL
+            self.rounded(rect, fill, LINE, 0)
             self.label(str(index + 1), rect.centerx,
-                       rect.centery, 18, WHITE if active else GREEN, True, "center")
+                       rect.centery, 18, TEXT, True, "center")
             self.buttons.append((f"step:{index}", rect))
             syllables = part["syllables"]
             if syllables:
                 self.label(syllables[index], rect.centerx, 209, 14,
-                           ORANGE if active else MUTED, align="center", limit=max(rect.width, 30))
+                           ORANGE if active else WHITE, align="center", limit=max(rect.width, 30))
 
     def draw_fretboard(self, position):
         panel = pygame.Rect(12, 227, 376, 314)
@@ -170,18 +205,22 @@ class GuitarApp:
         cell_width = 59
         y0 = 386
         y_gap = 26
+        pygame.draw.rect(self.screen, WOOD_DARK, (x0 - 5, 376, 305, 148))
+        pygame.draw.rect(self.screen, WOOD, (x0 - 1, 379, 297, 141))
+        for y in (401, 455, 506):
+            pygame.draw.rect(self.screen, (149, 104, 64), (x0 + 4, y, 282, 5))
         for fret in range(1, 6):
             x = x0 + (fret - 0.5) * cell_width
             self.label(str(fret), int(x), 360, 15, MUTED, align="center")
         for boundary in range(6):
             x = x0 + boundary * cell_width
-            pygame.draw.line(self.screen, MUTED if boundary == 0 else LINE,
+            pygame.draw.line(self.screen, WOOD_DARK if boundary == 0 else (189, 184, 151),
                              (x, 377), (x, y0 + 5 * y_gap + 8), 4 if boundary == 0 else 2)
         for string in range(1, 7):
             y = y0 + (string - 1) * y_gap
             active = string == position["string"]
-            pygame.draw.line(self.screen, GREEN_LIGHT if active else LINE,
-                             (x0, y), (x0 + 5 * cell_width, y), 2 if active else max(1, string // 3))
+            pygame.draw.line(self.screen, ORANGE if active else WHITE,
+                             (x0, y), (x0 + 5 * cell_width, y), 3 if active else max(1, string // 3))
             self.label(str(string), 38, y, 16, GREEN if active else MUTED,
                        active, "center")
         marker_x = int(x0 + (max(1, position["fret"]) - 0.5) * cell_width)
@@ -195,20 +234,38 @@ class GuitarApp:
 
     def draw_chooser(self):
         shade = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        shade.fill((13, 35, 27, 170))
+        shade.fill((13, 20, 15, 190))
         self.screen.blit(shade, (0, 0))
         self.buttons = []
-        self.rounded(pygame.Rect(17, 200, 366, 450), BACKGROUND, radius=20)
-        self.label("Выбери мелодию", 36, 223, 27, GREEN, True)
-        self.button("close", pygame.Rect(324, 216, 42, 42), "X", GREEN_PALE, size=23)
+        self.rounded(pygame.Rect(17, 200, 366, 450), PANEL)
+        self.label("Выбери мелодию", 36, 223, 27, TEXT, True)
+        self.button("close", pygame.Rect(324, 216, 42, 42), "X", ORANGE, TEXT, size=23)
         for index, song in enumerate(self.game.songs):
             rect = pygame.Rect(32, 281 + index * 84, 336, 70)
             self.rounded(rect, GREEN_PALE if index == self.game.song_index else WHITE, LINE)
             self.label(song["title"], rect.x + 14, rect.y + 13, 19,
-                       GREEN, True, limit=rect.width - 27)
+                       TEXT, True, limit=rect.width - 27)
             self.label(f"{len(song['fragments'])} фрагментов", rect.x + 14,
                        rect.y + 41, 15, MUTED)
             self.buttons.append((f"song:{index}", rect))
+
+    def draw_help(self):
+        shade = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        shade.fill((13, 20, 15, 190))
+        self.screen.blit(shade, (0, 0))
+        self.buttons = []
+        self.rounded(pygame.Rect(17, 118, 366, 628), PANEL)
+        self.label("КАК ИГРАТЬ", 34, 140, 27, TEXT, True)
+        self.button("close_help", pygame.Rect(324, 133, 42, 42), "X", ORANGE, TEXT, size=23)
+        for index, (title, detail) in enumerate(HELP_STEPS):
+            y = 199 + index * 99
+            self.rounded(pygame.Rect(31, y, 338, 86), WHITE)
+            pygame.draw.rect(self.screen, GREEN, (43, y + 14, 38, 38))
+            pygame.draw.rect(self.screen, LINE, (43, y + 14, 38, 38), 3)
+            self.label(index + 1, 62, y + 33, 23, WHITE, True, "center")
+            self.label(title, 92, y + 14, 19, TEXT, True, limit=258)
+            self.label(detail, 44, y + 58, 15, MUTED, limit=307)
+        self.label("Ритм не проверяется", 200, 713, 16, MUTED, align="center")
 
     def stop_playback(self):
         self.play_kind = None
@@ -320,6 +377,14 @@ class GuitarApp:
                 self.feedback_color = ORANGE
 
     def activate(self, name):
+        if name == "help":
+            self.stop_playback()
+            self.stop_listening()
+            self.help_open = True
+            return
+        if name == "close_help":
+            self.help_open = False
+            return
         if name == "choose":
             self.stop_playback()
             self.stop_listening()
@@ -364,7 +429,9 @@ class GuitarApp:
             if rect.collidepoint(position):
                 self.activate(name)
                 return
-        if self.chooser:
+        if self.help_open:
+            self.help_open = False
+        elif self.chooser:
             self.chooser = False
 
     def touch_event(self, point):
@@ -387,7 +454,9 @@ class GuitarApp:
                     if self.recorder:
                         self.stop_listening()
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    if self.chooser:
+                    if self.help_open:
+                        self.help_open = False
+                    elif self.chooser:
                         self.chooser = False
                     else:
                         running = False
