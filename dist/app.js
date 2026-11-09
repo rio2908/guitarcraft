@@ -17,6 +17,7 @@ const POSITIONS = {
   F4: { label: 'ФА', string: 1, fret: 1, finger: 1, frequency: 349.23 },
   'F#4': { label: 'ФА♯', string: 1, fret: 2, finger: 2, frequency: 369.99 },
   G4: { label: 'СОЛЬ', string: 1, fret: 3, finger: 3, frequency: 392.0 },
+  'G#4': { label: 'СОЛЬ♯', string: 1, fret: 4, finger: 4, frequency: 415.30, sample: 'A4', playbackRate: 2 ** (-1 / 12) },
   A4: { label: 'ЛЯ', string: 1, fret: 5, finger: 4, frequency: 440.0 },
 };
 
@@ -97,12 +98,17 @@ const ANTOSHKA_PHRASES = [
   'E4 D4 B3 C4:2 E4 D4 B3 C4:3',
 ];
 
-// Single-note beginner melody of Baby Shark in G major. The source spells
-// out the repeated D-E-G hook and the closing G-G-F# figure:
-// https://www.piano-keyboard-guide.com/piano-notes-for-pinkfong-baby-shark-song-easy-piano-tutorial/amp/
-const BABY_SHARK_LINE = 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4';
-const BABY_SHARK_ENDING = 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4 G4 G4 F#4:3';
-const BABY_SHARK_SECTIONS = ['Акулёнок', 'Мама-акула', 'Папа-акула'];
+// The longer beginner arrangement follows the three repeated lines and short
+// cadence of each verse, then the semitone key change at "Run away".
+// https://www.pianokeyboardnotes.com/baby-shark-piano.html
+const BABY_SHARK_SECTIONS = [
+  { title: 'Акулёнок', hook: 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4', ending: 'G4 G4 F#4:3' },
+  { title: 'Мама-акула', hook: 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4', ending: 'G4 G4 F#4:3' },
+  { title: 'Папа-акула', hook: 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4', ending: 'G4 G4 F#4:3' },
+  { title: 'На охоту', hook: 'D4 E4 G4:2 G4 G4 G4 G4 G4 G4', ending: 'G4 G4 F#4:3' },
+  { title: 'Убегаем', hook: 'D#4 F4 G#4:2 G#4 G#4 G#4 G#4 G#4 G#4', ending: 'G#4 G#4 G4:3' },
+  { title: 'Спаслись', hook: 'D#4 F4 G#4:2 G#4 G#4 G#4 G#4 G#4 G#4', ending: 'G#4 G#4 G4:4' },
+];
 
 const SONGS = [
   {
@@ -137,10 +143,9 @@ const SONGS = [
     beatMs: 260, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && [1, 3, 5].includes(index) ? 300 : false }))),
   },
   {
-    id: 'baby-shark', progressId: 'baby-shark-v2', title: 'Baby Shark — Акулёнок', subtitle: 'Три части мелодии · учебная версия', icon: '♪', excerpt: true,
+    id: 'baby-shark', progressId: 'baby-shark-v3', title: 'Baby Shark — Акулёнок', subtitle: 'Шесть частей мелодии · учебная версия', icon: '♪', excerpt: true,
     beatMs: 245, fragments: [
-      ...BABY_SHARK_SECTIONS.flatMap((title, sectionIndex) => [BABY_SHARK_LINE, BABY_SHARK_LINE, BABY_SHARK_ENDING].flatMap((phrase, phraseIndex) => makeFragments(`${title} · строка ${phraseIndex + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && phraseIndex === 2 && sectionIndex < BABY_SHARK_SECTIONS.length - 1 ? 300 : false })))),
-      ...makeFragments('Финал', 'D4 E4 G4:4'),
+      ...BABY_SHARK_SECTIONS.flatMap(({ title, hook, ending }, sectionIndex) => [hook, hook, hook, ending].flatMap((phrase, phraseIndex) => makeFragments(`${title} · строка ${phraseIndex + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter && phraseIndex === 3 && sectionIndex < BABY_SHARK_SECTIONS.length - 1 ? 300 : false })))),
     ],
   },
 ];
@@ -262,7 +267,7 @@ async function ensureAudioContext() {
 async function loadSamples() {
   if (!state.samplePromise) {
     state.samplePromise = Promise.all(Object.keys(POSITIONS).map(async key => {
-      const response = await fetch(`./samples/${encodeURIComponent(key)}.wav`);
+      const response = await fetch(`./samples/${encodeURIComponent(POSITIONS[key].sample || key)}.wav`);
       if (!response.ok) throw new Error(`Sample ${key} could not be loaded`);
       state.sampleBuffers[key] = await state.audioContext.decodeAudioData(await response.arrayBuffer());
     })).catch(error => { state.samplePromise = null; throw error; });
@@ -276,6 +281,7 @@ function pluck(noteId, duration = .55, melody = false) {
   const sample = state.sampleBuffers[noteId];
   if (!sample) throw new Error(`Missing guitar sample for ${noteId}`);
   const source = ctx.createBufferSource(); source.buffer = sample;
+  source.playbackRate.value = POSITIONS[noteId].playbackRate || 1;
   const gain = ctx.createGain();
   const ringTime = Math.min(Math.max(duration, .12), sample.duration - .12);
   const releaseAt = now + (melody ? ringTime * .78 : ringTime);
