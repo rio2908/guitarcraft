@@ -57,6 +57,27 @@ class ScreenTests(unittest.TestCase):
         self.app.on_touch((240, 580))
         self.assertEqual(self.app.game.note_index, 1)
 
+    def test_syllable_steps_use_large_cards_in_two_rows(self):
+        self.app.game.select_song(3)
+        self.app.draw()
+        steps = [rect for name, rect in self.app.buttons if name.startswith("step:")]
+        self.assertEqual(len(steps), 9)
+        self.assertEqual(len({rect.y for rect in steps}), 2)
+        self.assertGreaterEqual(min(rect.height for rect in steps), 56)
+        self.assertGreaterEqual(min(rect.width for rect in steps), 68)
+
+        short_part = next(
+            (song_index, fragment_index)
+            for song_index, song in enumerate(self.app.game.songs)
+            for fragment_index, part in enumerate(song["fragments"])
+            if len(part["notes"]) <= 5
+        )
+        self.app.game.select_song(short_part[0])
+        self.app.game.fragment_index = short_part[1]
+        self.app.draw()
+        short_steps = [rect for name, rect in self.app.buttons if name.startswith("step:")]
+        self.assertGreaterEqual(min(rect.height for rect in short_steps), 100)
+
     def test_song_playback_contains_every_note(self):
         self.app.game.select_song(2)
         self.app.start_playback("song")
