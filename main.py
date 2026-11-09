@@ -199,16 +199,20 @@ class GuitarApp:
             fill = GREEN if active else GREEN_PALE if done else PANEL
             self.rounded(rect, fill, GREEN if active else LINE, 12)
             self.buttons.append((f"step:{index}", rect))
+            position = self.game.catalog["positions"][notes[index]]
+            fret_string = f"л{position['fret']}/с{position['string']}"
             syllables = part["syllables"]
             if syllables:
-                self.label(str(index + 1), rect.centerx, top + (11 if two_rows else 25),
-                           15, WHITE if active else MUTED, align="center")
-                self.label(syllables[index], rect.centerx, top + (37 if two_rows else 76),
-                           19 if two_rows else 23, WHITE if active else TEXT,
+                self.label(syllables[index], rect.centerx, top + (16 if two_rows else 36),
+                           19 if two_rows else 25, WHITE if active else TEXT,
+                           True, "center", limit=rect.width - 8)
+                self.label(fret_string, rect.centerx, top + (41 if two_rows else 84),
+                           16 if two_rows else 20, WHITE if active else GREEN,
                            True, "center", limit=rect.width - 8)
             else:
-                self.label(str(index + 1), rect.centerx, rect.centery,
-                           25, WHITE if active else TEXT, True, "center")
+                self.label(fret_string, rect.centerx, rect.centery,
+                           17 if two_rows else 22, WHITE if active else TEXT,
+                           True, "center", limit=rect.width - 8)
 
     def draw_fretboard(self, position):
         panel = pygame.Rect(12, 284, 376, 270)

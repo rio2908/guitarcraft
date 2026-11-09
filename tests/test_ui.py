@@ -78,6 +78,22 @@ class ScreenTests(unittest.TestCase):
         short_steps = [rect for name, rect in self.app.buttons if name.startswith("step:")]
         self.assertGreaterEqual(min(rect.height for rect in short_steps), 100)
 
+    def test_step_cards_show_syllable_and_fret_string_without_step_number(self):
+        part = self.app.game.fragment
+        with patch.object(self.app, "label") as draw_label:
+            self.app.draw_steps(part)
+        labels = [call.args[0] for call in draw_label.call_args_list]
+        expected = []
+        for syllable, note in zip(part["syllables"], part["notes"]):
+            position = self.app.game.catalog["positions"][note]
+            expected.extend((syllable, f"л{position['fret']}/с{position['string']}"))
+        self.assertEqual(labels, expected)
+
+        without_lyrics = {**part, "syllables": []}
+        with patch.object(self.app, "label") as draw_label:
+            self.app.draw_steps(without_lyrics)
+        self.assertEqual([call.args[0] for call in draw_label.call_args_list], expected[1::2])
+
     def test_song_playback_contains_every_note(self):
         self.app.game.select_song(2)
         self.app.start_playback("song")
