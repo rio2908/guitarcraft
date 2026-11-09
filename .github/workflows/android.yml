@@ -71,6 +71,9 @@ jobs:
           set +o pipefail
           yes | buildozer -v android debug
 
+      - name: Apply stable debug signature
+        run: bash tools/sign_android.sh bin/*.apk
+
       - name: Enable Android emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
