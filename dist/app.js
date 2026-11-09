@@ -20,7 +20,7 @@ const POSITIONS = {
   A4: { label: 'ЛЯ', string: 1, fret: 5, finger: 4, frequency: 440.0 },
 };
 
-function makeFragments(title, score, size = 7) {
+function makeFragments(title, score, size = 7, lyrics = null) {
   const events = score.trim().split(/\s+/).map(token => {
     const [note, beatText, soundText] = token.split(':');
     if (!POSITIONS[note]) throw new Error(`Unknown pitch ${note}`);
@@ -30,17 +30,25 @@ function makeFragments(title, score, size = 7) {
     return { note, beats, soundBeats };
   });
   const result = [];
+  if (lyrics && lyrics.syllables.length !== events.length) throw new Error(`Lyric alignment does not match ${title}`);
   for (let i = 0; i < events.length; i += size) {
     const part = events.slice(i, i + size);
-    result.push({ title: `${title} · часть ${result.length + 1}`, notes: part.map(event => event.note), beats: part.map(event => event.beats), soundBeats: part.map(event => event.soundBeats), pauseAfter: i + size >= events.length });
+    result.push({ title: `${title} · часть ${result.length + 1}`, lyricLine: lyrics?.lines?.[result.length] || lyrics?.line || '', syllables: lyrics?.syllables.slice(i, i + size) || [], notes: part.map(event => event.note), beats: part.map(event => event.beats), soundBeats: part.map(event => event.soundBeats), pauseAfter: i + size >= events.length });
   }
   return result;
 }
+const lyric = (line, syllables, lines) => ({ line, syllables: syllables.split(' '), lines });
 
 // Familiar F-major register of the folk melody, played within the first five frets.
 // Source: https://urokcifri.ru/uroki-po-pianino-po-ciframi/
 const GEESE_OPENING = 'F4 E4 D4 C4 G4:2 G4:2 F4 E4 D4 C4 G4:2 G4:2';
 const GEESE_REFRAIN = 'F4 A4 A4 F4 E4 G4 G4 E4 D4 E4 F4 D4 C4:2 C4:2';
+// The two verses and refrain in this folk song follow the published text:
+// https://ru.wikisource.org/wiki/Веселые_гуси_(Клокова-Лапина)
+const GEESE_FIRST = lyric('Жили у бабуси два весёлых гуся', 'Жи ли у ба бу си два ве сё лых гу ся', ['Жили у бабуси', 'Два весёлых гуся']);
+const GEESE_FIRST_REFRAIN = lyric('Один серый, другой белый — два весёлых гуся', 'О дин се рый дру гой бе лый два ве сё лых гу ся', ['Один серый, другой белый', 'Два весёлых гуся']);
+const GEESE_SECOND = lyric('Мыли гуси лапки в луже у канавки', 'Мы ли гу си лап ки лу же у ка нав ки', ['Мыли гуси лапки', 'В луже у канавки']);
+const GEESE_SECOND_REFRAIN = lyric('Один серый, другой белый — спрятались в канавке', 'О дин се рый дру гой бе лый спря та лись ка нав ке', ['Один серый, другой белый', 'Спрятались в канавке']);
 
 // John Williams, first two phrases of Hedwig's Theme, transposed from E minor to A minor.
 // The eighth-note durations follow the 3/4 phrasing in this beginner transcription:
@@ -69,6 +77,18 @@ const FIXIKI_PHRASES = [
   'D4:2 G4:2 B3:2 C4:2 D4:2 E4:2 F#4 G4:3',
   'C4:2 B3:2 B3:2 A3:2 A3:2 G3:2',
 ];
+// The eight vocal lines correspond to the eight phrases of the existing score.
+// https://karunika.ru/pesni_fiksikov/kto_takie_fiksiki
+const FIXIKI_LYRICS = [
+  lyric('До чего же фиксики', 'До че го же фик си ки'),
+  lyric('Маленького роста', 'ма лень ко го рос та'),
+  lyric('Малых и через очки', 'Ма лых и че рез оч ки'),
+  lyric('Разглядеть непросто', 'раз гля деть не прос то'),
+  lyric('Они такая мелочь', 'О ни та ка я ме лочь'),
+  lyric('Что их почти что нет', 'что их поч ти что нет'),
+  lyric('А кто такие фиксики?', 'А кто та ки е фик си ки'),
+  lyric('Большой, большой секрет', 'боль шой боль шой се крет'),
+];
 
 // Leonid Beckman's verse melody in F major, transposed to D major for the
 // first five guitar frets. Eighth-note units follow the vocal score:
@@ -79,18 +99,42 @@ const ELOCHKA_VERSE = [
   'B3 B3 G4 G4 F#4 E4 D4 D4',
   'F#4 F#4 E4 F#4 D4:3',
 ];
+// Three verses of the vocal text, divided into short syllable cues. A joined
+// cue marks two quick syllables on one simplified guitar note; an ellipsis
+// holds the preceding syllable over one more note.
+// https://kcls.org/content/russian-a-fir-tree-in-the-forest-в-лесу-родилась-ёлочка/
+const ELOCHKA_LYRICS = [
+  [
+    lyric('В лесу родилась ёлочка', 'В-ле су ро ди лась лась… ё лоч ка'),
+    lyric('В лесу она росла', 'ле су о на рос ла'),
+    lyric('Зимой и летом стройная', 'Зи мой и ле том строй на я'),
+    lyric('Зелёная была', 'зе лё на-я бы ла'),
+  ],
+  [
+    lyric('Метель ей пела песенку', 'Ме тель ей пе ла ла… пе сен ку'),
+    lyric('Спи, ёлочка, бай-бай', 'Спи ё лоч ка бай бай'),
+    lyric('Мороз снежком укутывал', 'Мо роз снеж ком у ку ты вал'),
+    lyric('Смотри, не замерзай', 'смо три не за-мер зай'),
+  ],
+  [
+    lyric('Трусишка зайка серенький', 'Тру сиш ка зай ка ка… се рень кий'),
+    lyric('Под ёлочкой скакал', 'Под ё лоч кой ска кал'),
+    lyric('Порою волк, сердитый волк', 'По ро ю волк сер ди тый волк'),
+    lyric('Рысцою пробегал', 'рыс цо ю про-бе гал'),
+  ],
+];
 
 const SONGS = [
   {
-    id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · два куплета · учебная версия', icon: '♩',
+    id: 'geese', progressId: 'geese-v2', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · два куплета · учебная версия', icon: '♩',
     beatMs: 280,
     fragments: [
-      ...makeFragments('Жили у бабуси', GEESE_OPENING, 6),
-      ...makeFragments('Один серый, другой белый', GEESE_REFRAIN, 7),
-      ...makeFragments('Повтор', GEESE_REFRAIN, 7),
-      ...makeFragments('Второй куплет', GEESE_OPENING, 6),
-      ...makeFragments('Второй припев', GEESE_REFRAIN, 7),
-      ...makeFragments('Финальный повтор', GEESE_REFRAIN, 7),
+      ...makeFragments('Жили у бабуси', GEESE_OPENING, 6, GEESE_FIRST),
+      ...makeFragments('Один серый, другой белый', GEESE_REFRAIN, 8, GEESE_FIRST_REFRAIN),
+      ...makeFragments('Повтор', GEESE_REFRAIN, 8, GEESE_FIRST_REFRAIN),
+      ...makeFragments('Второй куплет', GEESE_OPENING, 6, GEESE_SECOND),
+      ...makeFragments('Второй припев', GEESE_REFRAIN, 8, GEESE_SECOND_REFRAIN),
+      ...makeFragments('Финальный повтор', GEESE_REFRAIN, 8, GEESE_SECOND_REFRAIN),
     ],
   },
   {
@@ -102,11 +146,11 @@ const SONGS = [
   },
   {
     id: 'fixiki', progressId: 'fixiki-v2', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
-    beatMs: 235, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8).map(part => ({ ...part, pauseAfter: index === 5 ? 470 : false }))),
+    beatMs: 235, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8, FIXIKI_LYRICS[index]).map(part => ({ ...part, pauseAfter: index === 5 ? 470 : false }))),
   },
   {
-    id: 'elochka', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · три куплета · учебная версия', icon: '♩',
-    beatMs: 290, fragments: Array.from({ length: 3 }, (_, verseIndex) => ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет ${verseIndex + 1} · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: part.pauseAfter ? (index < 3 ? 260 : verseIndex < 2 ? 200 : false) : false })))).flat(),
+    id: 'elochka', progressId: 'elochka-v2', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · три куплета · учебная версия', icon: '♩',
+    beatMs: 290, fragments: Array.from({ length: 3 }, (_, verseIndex) => ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет ${verseIndex + 1} · строка ${index + 1}`, phrase, 9, ELOCHKA_LYRICS[verseIndex][index]).map(part => ({ ...part, pauseAfter: part.pauseAfter ? (index < 3 ? 260 : verseIndex < 2 ? 200 : false) : false })))).flat(),
   },
 ];
 
@@ -148,7 +192,8 @@ function renderNotes() {
   $('note-list').innerHTML = fragment().notes.map((key, i) => {
     const done = Boolean(state.completed[noteKey(state.fragmentIndex, i)]);
     const target = POSITIONS[key];
-    return `<button class="note-button ${i === state.noteIndex ? 'active' : ''} ${done ? 'complete' : ''}" data-note="${i}" type="button" aria-label="Шаг ${i + 1}: ${positionText(target)}${done ? ', пройден' : ''}" aria-pressed="${i === state.noteIndex}"><span class="note-number">ШАГ ${i + 1}</span><span class="step-string">Струна <strong>${target.string}</strong></span><span class="step-fret">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>${done ? '<span class="note-check">✓</span>' : ''}</button>`;
+    const syllable = fragment().syllables[i];
+    return `<button class="note-button ${i === state.noteIndex ? 'active' : ''} ${done ? 'complete' : ''} ${syllable ? 'has-lyric' : ''}" data-note="${i}" type="button" aria-label="Шаг ${i + 1}: ${positionText(target)}${syllable ? `, слог ${syllable}` : ''}${done ? ', пройден' : ''}" aria-pressed="${i === state.noteIndex}"><span class="note-number">ШАГ ${i + 1}</span><span class="step-string">Струна <strong>${target.string}</strong></span><span class="step-fret">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>${syllable ? `<span class="note-lyric">${syllable}</span>` : ''}${done ? '<span class="note-check">✓</span>' : ''}</button>`;
   }).join('');
   document.querySelectorAll('[data-note]').forEach(button => button.addEventListener('click', () => {
     stopListening(); stopPlayback(); state.noteIndex = Number(button.dataset.note); setFeedback('ready'); render();
@@ -181,7 +226,7 @@ function render() {
   $('song-subtitle').textContent = song().subtitle;
   $('fragment-number').textContent = state.fragmentIndex + 1;
   $('fragment-total').textContent = song().fragments.length;
-  $('fragment-caption').textContent = fragment().title;
+  $('fragment-caption').textContent = fragment().lyricLine || fragment().title;
   $('prev-fragment').disabled = state.fragmentIndex === 0;
   $('next-fragment').disabled = state.fragmentIndex === song().fragments.length - 1;
   $('note-counter').textContent = `${state.noteIndex + 1} / ${fragment().notes.length}`;
@@ -193,6 +238,9 @@ function render() {
   $('next-step').textContent = lastStep ? 'Сначала ↻' : 'Следующий →';
   renderNotes();
   const target = currentNote();
+  const syllable = fragment().syllables[state.noteIndex];
+  $('current-syllable').hidden = !syllable;
+  $('syllable-text').textContent = syllable || '';
   $('position-title').innerHTML = `<span class="position-pill">Струна <strong>${target.string}</strong></span><span class="position-join">→</span><span class="position-pill">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>`;
   $('position-hint').textContent = target.fret === 0 ? 'Сыграй струну, ничего не зажимая' : `Зажми ${target.fret}-й лад ${['', 'первым', 'вторым', 'третьим', 'четвёртым'][target.finger]} пальцем`;
   renderFretboard();

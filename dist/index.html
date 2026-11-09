@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#f6f4ed" />
     <meta name="description" content="Прототип обучения простым мелодиям на гитаре по струнам и ладам." />
     <title>ГитарКрафт — учи мелодии по струнам и ладам</title>
-    <link rel="stylesheet" href="./styles.css?v=25" />
-    <script src="./app.js" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=26" />
+    <script src="./app.js?v=26" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -72,6 +72,7 @@
               <div class="fret-card-head">
                 <div>
                   <div class="section-eyebrow">СЕЙЧАС СЫГРАЙ</div>
+                  <div id="current-syllable" class="current-syllable" aria-live="polite" hidden><span>СЛОГ</span><strong id="syllable-text"></strong></div>
                   <div id="position-title" class="position-title"><span class="position-pill">Струна <strong>1</strong></span><span class="position-join">→</span><span class="position-pill">Лад <strong>1</strong></span></div>
                   <div id="position-hint" class="position-hint">Зажми вторым пальцем</div>
                   <div class="string-orientation">1 — тонкая · 6 — толстая</div>
