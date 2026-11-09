@@ -65,6 +65,33 @@ const FIXIKI_PHRASES = [
   'C4:2 B3:2 B3:2 A3:2 A3:2 G3:2',
 ];
 
+// Leonid Beckman's verse melody in F major, transposed to D major for the
+// first five guitar frets. Eighth-note units follow the vocal score:
+// https://notarhiv.ru/detskie/3/1%20%28423%29.pdf
+const ELOCHKA_VERSE = [
+  'A3 F#4 F#4 E4 F#4 D4 A3 A3 A3',
+  'F#4 F#4 G4 E4 A4:3 A4',
+  'B3 B3 G4 G4 F#4 E4 D4 D4',
+  'F#4 F#4 E4 F#4 D4:3',
+];
+
+// Vladimir Shainsky's verse and refrain in the first five guitar frets.
+// The optional 6|7 ornament in the beginner transcription is simplified to 6.
+// https://jliza.ru/assets/jlcontent/article-music/top10/antoshka/antoshka-notyi-cziframi-.pdf
+const ANTOSHKA_PHRASES = [
+  'A4 G4 G4 A4 F4 F4 A4 G4 G4 E4 C4 A4 F4:2',
+  'A4 G4 G4 A4 F4 F4 A4 G4 A4 G4 F4 E4 D4 C4:2',
+  'A4 A4 A4 G4 G4 A4 G4 F4:2',
+  'A4 A4 A4 G4 F4 E4 G4 F4 A4 A4 A4 G4 F4 E4 G4 F4:2',
+  'A4 G4 E4 F4 A4 G4 E4 F4:2',
+];
+
+// Single-note beginner melody of Baby Shark in G major. The source spells
+// out the repeated D-E-G hook and the closing G-G-F# figure:
+// https://www.piano-keyboard-guide.com/piano-notes-for-pinkfong-baby-shark-song-easy-piano-tutorial/amp/
+const BABY_SHARK_LINE = 'D4:2 E4:2 G4:2 G4 G4 G4 G4 G4 G4';
+const BABY_SHARK_ENDING = 'D4:2 E4:2 G4:2 G4 G4 G4 G4 G4 G4 G4 G4 F#4:3';
+
 const SONGS = [
   {
     id: 'geese', title: 'Два весёлых гуся', subtitle: 'Украинская народная мелодия · учебная версия', icon: '♩',
@@ -82,6 +109,18 @@ const SONGS = [
   {
     id: 'fixiki', progressId: 'fixiki-v2', title: 'Фиксики — Кто такие фиксики?', subtitle: 'Георгий Васильев · куплет и припев · учебная версия', icon: '♫', excerpt: true,
     beatMs: 235, fragments: FIXIKI_PHRASES.flatMap((phrase, index) => makeFragments(index < 6 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 5}`, phrase, 8).map(part => ({ ...part, pauseAfter: index === 5 ? 470 : false }))),
+  },
+  {
+    id: 'elochka', title: 'В лесу родилась ёлочка', subtitle: 'Леонид Бекман · мелодия куплета · учебная версия', icon: '♩',
+    beatMs: 290, fragments: ELOCHKA_VERSE.flatMap((phrase, index) => makeFragments(`Куплет · строка ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index < 3 && part.pauseAfter ? 260 : false }))),
+  },
+  {
+    id: 'antoshka', title: 'Антошка', subtitle: 'Владимир Шаинский · куплет и припев · учебный отрывок', icon: '♫', excerpt: true,
+    beatMs: 235, fragments: ANTOSHKA_PHRASES.flatMap((phrase, index) => makeFragments(index < 2 ? `Куплет · строка ${index + 1}` : `Припев · строка ${index - 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: index === 1 && part.pauseAfter ? 380 : false }))),
+  },
+  {
+    id: 'baby-shark', title: 'Baby Shark — Акулёнок', subtitle: 'Основной мотив · учебная версия', icon: '♪', excerpt: true,
+    beatMs: 225, fragments: [BABY_SHARK_LINE, BABY_SHARK_LINE, BABY_SHARK_ENDING].flatMap((phrase, index) => makeFragments(`Мотив · повтор ${index + 1}`, phrase, 7).map(part => ({ ...part, pauseAfter: false }))),
   },
 ];
 
