@@ -13,7 +13,7 @@ icon.adaptive_background.filename = assets/icon-background.png
 requirements = python3==3.10.11,hostpython3==3.10.11,pygame,pyjnius
 orientation = portrait
 fullscreen = 1
-android.archs = arm64-v8a
+android.archs = arm64-v8a, x86_64
 android.allow_backup = True
 android.api = 34
 android.minapi = 24
