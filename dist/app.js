@@ -186,9 +186,11 @@ function render() {
   $('next-fragment').disabled = state.fragmentIndex === song().fragments.length - 1;
   $('note-counter').textContent = `${state.noteIndex + 1} / ${fragment().notes.length}`;
   $('mobile-song-select').value = String(state.songIndex);
-  $('mobile-step-counter').textContent = `Шаг ${state.noteIndex + 1} из ${fragment().notes.length}`;
+  $('mobile-step-counter').textContent = `Фрагмент ${state.fragmentIndex + 1}/${song().fragments.length} · шаг ${state.noteIndex + 1}/${fragment().notes.length}`;
   $('prev-step').disabled = state.fragmentIndex === 0 && state.noteIndex === 0;
-  $('next-step').setAttribute('aria-label', state.fragmentIndex === song().fragments.length - 1 && state.noteIndex === fragment().notes.length - 1 ? 'К первому шагу' : 'Следующий шаг');
+  const lastStep = state.fragmentIndex === song().fragments.length - 1 && state.noteIndex === fragment().notes.length - 1;
+  $('next-step').setAttribute('aria-label', lastStep ? 'К первому шагу' : 'Следующий шаг');
+  $('next-step').textContent = lastStep ? 'Сначала ↻' : 'Следующий →';
   renderNotes();
   const target = currentNote();
   $('position-title').innerHTML = `<span class="position-pill">Струна <strong>${target.string}</strong></span><span class="position-join">→</span><span class="position-pill">${target.fret === 0 ? 'Открытая' : `Лад <strong>${target.fret}</strong>`}</span>`;

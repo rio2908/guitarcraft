@@ -31,3 +31,18 @@
 
 .step-arrows{display:flex;gap:8px}.step-arrows .round-button{width:38px;height:38px}.fret-fragment-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}.fret-fragment-nav button{min-height:44px;border:1px solid #cdded0;border-radius:10px;background:#e8f2e5;color:#24583d;font-size:12px;font-weight:800;touch-action:manipulation}.fret-fragment-nav button:hover:not(:disabled){background:#dcefd8}
 @media(max-width:760px){.step-arrows .round-button{width:42px;height:42px;font-size:24px}.fret-fragment-nav{margin-top:11px}.fret-fragment-nav button{min-height:48px;font-size:13px}}
+
+/* The step controls follow the fretboard on both screen sizes. */
+.step-arrows{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.step-arrows .round-button{width:auto;height:44px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap}
+
+@media(max-width:760px){
+  .topbar{height:44px;padding:0 14px}.brand{font-size:16px}.brand-mark{width:28px;height:28px;font-size:20px}
+  .main-layout{padding-bottom:18px}.lesson-head{min-height:70px;padding:10px 14px}.mobile-song-chooser{gap:0}.mobile-song-chooser label{display:none}.mobile-song-chooser select{min-height:48px;border:0;border-radius:10px;padding:8px 12px;font-size:15px}
+  .fragment-bar{min-height:60px;padding:9px 15px}.fragment-label{display:none}.fragment-caption{font-size:13px;margin:0}.mobile-step-counter{font-size:11px;color:#63816d;margin-top:3px}
+  .fret-card{padding:11px 12px 8px}.fret-card-head .section-eyebrow{display:none}.position-title{margin-top:0;gap:7px}.position-pill{min-height:46px;padding:6px 10px;font-size:13px}.position-pill strong{font-size:28px}.position-join{font-size:18px}.position-hint{font-size:11px;margin-top:5px}.string-orientation{font-size:10px;margin-top:3px}
+  .fret-scroll{margin-top:10px}.fret-label-row,.fret-row{grid-template-columns:42px repeat(5,minmax(0,1fr))}.fret-label-row{font-size:9px;color:#718e78}.fret-row,.fret-cell{height:37px}.fret-row.active-string{background:#e9f4e8;border-radius:6px}.fret-row.active-string .fret-cell:before{background:#438d59;height:3px}.fret-row.active-string .string-label{background:#215c40;color:#fff;padding:6px 2px;font-size:12px}.fret-cell.active-fret{background:#f9dfcf}.finger-marker{width:32px;height:32px;font-size:16px;background:#ed754b;box-shadow:0 3px 9px rgba(174,79,38,.28)}.open-marker{font-size:30px;line-height:25px}
+  .step-arrows{margin-top:12px}.step-arrows .round-button{height:48px;border-radius:11px;font-size:13px;border-color:#b7d2ba;color:#205a41}.step-arrows #next-step{background:#205a41;color:#fff;border-color:#205a41}.fret-fragment-nav{margin-top:8px}.fret-fragment-nav button{min-height:38px;background:#f1f6ee;font-size:11px;color:#4c7155;border-color:#d9e6d6}.fret-legend{display:none}
+  .action-row{padding:10px 14px 4px;gap:7px}.action-button{min-height:46px;padding:5px 7px;font-size:11px}.action-row #play-note{order:1}.action-row #check-note{order:2}.action-row #play-fragment{order:3}.action-row #play-song{order:4}.feedback{margin:5px 14px 0;min-height:44px;padding:8px 10px}.feedback.ready{display:none}.feedback p{font-size:10px}
+}
+@media(max-width:350px){.fret-row,.fret-cell{height:34px}.position-pill{min-height:42px;padding:5px 7px}.position-pill strong{font-size:24px}.step-arrows .round-button{height:44px}.action-button{min-height:44px}}

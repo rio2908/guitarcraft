@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f4ed" />
     <meta name="description" content="Прототип обучения простым мелодиям на гитаре по струнам и ладам." />
     <title>ГитарКрафт — учи мелодии по струнам и ладам</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=25" />
     <script src="./app.js" defer></script>
   </head>
   <body>
@@ -58,10 +58,6 @@
                 <div id="fragment-caption" class="fragment-caption">Жили у бабуси · часть 1</div>
                 <div id="mobile-step-counter" class="mobile-step-counter">Шаг 1 из 6</div>
               </div>
-              <div class="step-arrows" aria-label="Навигация по шагам">
-                <button id="prev-step" class="round-button" type="button" aria-label="Предыдущий шаг">‹</button>
-                <button id="next-step" class="round-button" type="button" aria-label="Следующий шаг">›</button>
-              </div>
             </div>
 
             <div class="notes-section">
@@ -78,12 +74,16 @@
                   <div class="section-eyebrow">СЕЙЧАС СЫГРАЙ</div>
                   <div id="position-title" class="position-title"><span class="position-pill">Струна <strong>1</strong></span><span class="position-join">→</span><span class="position-pill">Лад <strong>1</strong></span></div>
                   <div id="position-hint" class="position-hint">Зажми вторым пальцем</div>
-                  <div class="string-orientation">1-я струна — самая тонкая, 6-я — самая толстая</div>
+                  <div class="string-orientation">1 — тонкая · 6 — толстая</div>
                 </div>
               </div>
               <div class="fret-scroll">
                 <div class="fret-label-row"><span>СТРУНА</span><span>ЛАД 1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
                 <div id="fretboard" class="fretboard" role="img" aria-label="Гриф гитары с указанием струны и лада текущего шага"></div>
+              </div>
+              <div class="step-arrows" aria-label="Навигация по шагам">
+                <button id="prev-step" class="round-button" type="button" aria-label="Предыдущий шаг">← Назад</button>
+                <button id="next-step" class="round-button" type="button" aria-label="Следующий шаг">Следующий →</button>
               </div>
               <nav class="fret-fragment-nav" aria-label="Навигация по фрагментам">
                 <button id="prev-fragment" type="button" aria-label="Предыдущий фрагмент">← Фрагмент</button>
@@ -99,7 +99,7 @@
               <button id="check-note" class="action-button action-primary" type="button"><span class="button-icon mic-icon">◉</span> Проверить звук</button>
             </div>
 
-            <div id="feedback" class="feedback" aria-live="polite">
+            <div id="feedback" class="feedback ready" aria-live="polite">
               <div id="feedback-icon" class="feedback-icon">✦</div>
               <div>
                 <strong id="feedback-title">Готово к игре</strong>
